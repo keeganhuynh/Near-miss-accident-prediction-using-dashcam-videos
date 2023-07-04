@@ -1,0 +1,10 @@
+trajectory:
+  window_size: 1 # second
+  x_threshold: 1.5 #m
+  kalman_filter:
+    dt: 1
+    u_x: 0
+    u_y: 0
+    std_acc: 1
+    x_std_meas: 1
+    y_std_meas: 1
