@@ -362,7 +362,7 @@ def detect(file_source, vnp, speed, json_file_path,save_img=False):
                     identities = tracked_dets[:, 8]
                     categories = tracked_dets[:, 4]
                 
-                    cv2.imwrite(f'tam/{idx}.jpg', draw_boxes(im0, bbox_xyxy, risk, identities))
+                    cv2.imwrite(f'Frame_Extract/{idx}.jpg', draw_boxes(im0, bbox_xyxy, risk, identities))
                 #........................................................
             #     print(tracked_dets[:,:])
             # print('Tracked object: ', obj_list)
