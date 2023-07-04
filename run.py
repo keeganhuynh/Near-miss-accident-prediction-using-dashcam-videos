@@ -54,23 +54,22 @@ if __name__ == '__main__':
     json_file_path = folderpath + '/output.json'
     veclocity_path = folderpath + '/velocity.txt'
 
-    
-
     print('\nVIDEO PATH: ', folderpath)
     print('\nSAVE RESULT TO FOLDER: ', folderpath)
     print('\n====================================================\n')
     print('Save VNP txt to : ', vnp_output_path)
-    # fps, frame_count = MakeInput(folderpath, vnp_output_path, videopath, stage=2)
+    fps, frame_count = MakeInput(folderpath, vnp_output_path, videopath, stage=2)
 
     print('\n====================================================\n')
     print('KML File process, save velocity to: ', veclocity_path)
-    # VelocityExtract(veclocity_path, KML_file_path,fps)
+    VelocityExtract(veclocity_path, KML_file_path,fps)
     
     print('\n====================================================\n')
     print('Trajectory, save metadata to: ', json_file_path)
     print('\n====================================================\n')
-    TrajectoryAndMakingVideo(videopath, vnp_output_path, veclocity_path, json_file_path, fps=15)
+    TrajectoryAndMakingVideo(videopath, vnp_output_path, veclocity_path, json_file_path, fps)
 
-    ExtractVideo('tam', frame_count=223, fps=15)
+    ExtractVideo('Frame_Extract', frame_count, fps)
+    print('Save video')
     
 
