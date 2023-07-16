@@ -344,7 +344,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
                     txt_str += "%i %i %f %f %f %i %i %f %i" % (track.id+1, track.detclass, coors[0], coors[1], coors[2], track.centroidarr[-1][0], track.centroidarr[-1][1], objvec, appear_step)
                     id, cls, X, Y, Z, x, y, spd, appear = track.id+1, track.detclass, coors[0]-ego_car[0], coors[1], coors[2]-ego_car[2], track.centroidarr[-1][0],track.centroidarr[-1][1], objvec, appear_step
                     
-                    if (appear >= 5 and cls < 10):
+                    if (appear >= 5 and cls < 9):
                         obj_list.append([id, X, Z])
                     
                     # print()
