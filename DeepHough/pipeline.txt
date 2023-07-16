@@ -1,0 +1,10 @@
+1.Chạy ảnh full và ảnh cắt từ video
+2.Copy vào NKL DATA FOLDER
+3. Chạy deep hough với file forward custom_1 lưu kết quả vào point.txt
+4. Xóa ảnh cut ra khỏi file data nkl
+
+5. Chạy deephough trên ảnh full với forward custom_2 => horizon line lưu kết quả vào point_.txt
+6. Xóa ảnh full ra khỏi file data nkl
+
+
+
