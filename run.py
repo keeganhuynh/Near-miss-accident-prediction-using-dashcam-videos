@@ -17,9 +17,8 @@ parser.add_argument('--videopath', help='')
 parser.add_argument('--KML_file_path', help='')
 args = parser.parse_args()
 
-def ExtractVideo(img_path, frame_count, fps):
+def ExtractVideo(img_path, frame_count, fps, output_path):
   # Define the output video path
-  output_path = 'output_video.mp4'
   imgs = []
 
   for i in range(frame_count):
@@ -44,7 +43,7 @@ def ExtractVideo(img_path, frame_count, fps):
   out.release()
   cv2.destroyAllWindows()
 
-def makeJson(frame_count, data):
+def makeJson(frame_count, data, risk_json_path):
   datajson = {}
   f = open(data)
   data = json.load(f)
@@ -75,7 +74,7 @@ def makeJson(frame_count, data):
     
     datajson[f'frame{i}'] = frame_info
 
-  save_file = open("risk.json", "w")  
+  save_file = open(risk_json_path, "w")  
   json.dump(datajson, save_file)  
     
   print('save file to risk.json')
@@ -102,8 +101,8 @@ if __name__ == '__main__':
     vnp_output_path = folderpath + '/vnp.txt'
     json_file_path = folderpath + '/output.json'
     veclocity_path = folderpath + '/velocity.txt'
-
-    
+    risk_json_path = folderpath + '/risk.json'
+    video_path = folderpath + '/video.mp4'
 
     print('\nVIDEO PATH: ', folderpath)
     print('\nSAVE RESULT TO FOLDER: ', folderpath)
@@ -115,15 +114,14 @@ if __name__ == '__main__':
 
     print('\n====================================================\n')
     print('KML File process, save velocity to: ', veclocity_path)
-    # VelocityExtract(veclocity_path, KML_file_path, fps)
+    VelocityExtract(veclocity_path, KML_file_path, fps)
     
     print('\n====================================================\n')
     print('Trajectory, save metadata to: ', json_file_path)
     print('\n====================================================\n')
     TrajectoryAndMakingVideo(videopath, vnp_output_path, veclocity_path, json_file_path, fps, (1280, 720))
     
-    risk_json_file = makeJson(frame_count, json_file_path)
+    risk_json_file = makeJson(frame_count, json_file_path, risk_json_path)
 
-    ExtractVideo('tam', frame_count, fps)
-    
+    ExtractVideo('tam', frame_count, fps, video_path)
 
