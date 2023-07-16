@@ -1,5 +1,0 @@
-2023-05-31 02:48:16,453 INFO Namespace(config='./config.yml', model='dht_r50_nkl_d97b97138.pth', align=False, tmp='results')
-2023-05-31 02:48:18,029 INFO => loading pretrained model 'dht_r50_nkl_d97b97138.pth'
-2023-05-31 02:48:20,093 INFO => loaded checkpoint 'dht_r50_nkl_d97b97138.pth'
-2023-05-31 02:48:20,913 INFO Data loading done.
-2023-05-31 02:48:20,914 INFO Start testing.
