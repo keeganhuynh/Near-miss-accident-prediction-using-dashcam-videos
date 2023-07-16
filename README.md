@@ -8,7 +8,9 @@ Link: https://drive.google.com/file/d/1_e8QnFqQ7YeU8Vl140lSlvlADE_YD6oJ/view?usp
 **2) Run the run.py twice if you get error: "deephough model not found"**
 
 **3) HOW TO RUN THE VIDEO**
+
 Input: video + kml_flie
+
 Output: in you runs folder
 - vanishing_point_list
 - velocity_list
