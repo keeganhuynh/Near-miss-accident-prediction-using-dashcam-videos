@@ -5,7 +5,7 @@ Link: https://drive.google.com/file/d/1_e8QnFqQ7YeU8Vl140lSlvlADE_YD6oJ/view?usp
 
 ![image](https://github.com/keeganhuynh/Near-miss-accident-prediction-using-dashcam-videos/assets/58461941/1b732d76-bc6c-4dee-9924-792e6b12ef1a)
 
-**2) Run the run.py twice if you get error: "deephough model not found"**
+**2) Run the run.py twice if you get error: "no module name deep-hough"**
 
 **3) HOW TO RUN THE VIDEO**
 
@@ -18,4 +18,4 @@ Output: in you runs folder
 - data_json
 - output_video
 
-*In folder Runs, i give you a sample video and vanishing_point.txt to run the tool with out KML file, but you have to put "#" in front of the line 117 (run.py)*
+*In folder Runs, i give you a sample video and vanishing_point.txt to run the tool with out KML file, but you have to put "#" in front of the line 120 () (run.py)*
