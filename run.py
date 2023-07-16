@@ -93,6 +93,9 @@ if __name__ == '__main__':
         print(folder_name, 'is exists')
     else:
         path.mkdir()
+    
+    path = Path('DeepHough/data/NKL')
+    path.mkdir()
 
     print('Set up Finished')
     
