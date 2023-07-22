@@ -340,9 +340,9 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
                     # if save_bbox_dim:
                     #     txt_str += " %f %f" % (np.abs(track.bbox_history[-1][0] - track.bbox_history[-1][2]) / im0.shape[0], np.abs(track.bbox_history[-1][1] - track.bbox_history[-1][3]) / im0.shape[1])
                     
-                    point_color = (0, 0, 255)
-                    point_size = 5
-                    cv2.circle(im0, (int(vnp[idx][0]), int(vnp[idx][1])), point_size, point_color, -1)
+                    # point_color = (0, 0, 255)
+                    # point_size = 5
+                    # cv2.circle(im0, (int(vnp[idx][0]), int(vnp[idx][1])), point_size, point_color, -1)
                                         
                 with open(txt_path + '.txt', 'a') as f:
                   f.write(txt_str)
