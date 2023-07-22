@@ -281,28 +281,6 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
                 #loop over tracks
               
                 for track in tracks:
-                    # color = compute_color_for_labels(id)
-                    #draw colored tracks
-                    # if colored_trk:
-                    #     [cv2.line(im0, (int(track.centroidarr[i][0]),
-                    #                 int(track.centroidarr[i][1])), 
-                    #                 (int(track.centroidarr[i+1][0]),
-                    #                 int(track.centroidarr[i+1][1])),
-                    #                 rand_color_list[track.id], thickness=2) 
-                    #                 for i,_ in  enumerate(track.centroidarr) 
-                    #                   if i < len(track.centroidarr)-1 ] 
-                    # #draw same color tracks
-                    # else:
-                    #     [cv2.line(im0, (int(track.centroidarr[i][0]),
-                    #                 int(track.centroidarr[i][1])), 
-                    #                 (int(track.centroidarr[i+1][0]),
-                    #                 int(track.centroidarr[i+1][1])),
-                    #                 (255,0,0), thickness=2) 
-                    #                 for i,_ in  enumerate(track.centroidarr) 
-                    #                   if i < len(track.centroidarr)-1 ] 
-                    
-                    #print(track.id, track.detclass, uv_to_world(object_coor, 2.0, vnp[idx], img_shape, FOV))
-                    
                     object_coor = (track.centroidarr[-1][0],track.centroidarr[-1][1])
 
                     coors = uv_to_world(object_coor, 2.0, vnp[idx], img_shape, FOV)
@@ -324,11 +302,8 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
                       object_track.append(Object(fps, id = track.id+1))
                       object_track[track.id+1].update_his(location)
                       appear_step = object_track[track.id+1].FrameAppear()
-                      
-                    
-                    # Normalize coordinates
-                    # txt_str += "%i %i %f %f" % (track.id, track.detclass, track.centroidarr[-1][0] / im0.shape[1], track.centroidarr[-1][1] / im0.shape[0])
-                    txt_str += "%i %i %f %f %f %i %i %f %i" % (track.id+1, track.detclass, coors[0], coors[1], coors[2], track.centroidarr[-1][0], track.centroidarr[-1][1], objvec, appear_step)
+      
+                
                     id, cls, X, Y, Z, x, y, spd, appear = track.id+1, track.detclass, coors[0]-ego_car[0], coors[1], coors[2]-ego_car[2], track.centroidarr[-1][0],track.centroidarr[-1][1], objvec, appear_step
                     
                     if (appear >= 5 and cls < 9):
@@ -336,17 +311,6 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
                     
                     # print()
                     f_dict.append(object_dict(int(id), int(cls), float(X), float(Y), float(Z), float(spd), int(appear),x,y))
-                    txt_str += "\n"
-                    # if save_bbox_dim:
-                    #     txt_str += " %f %f" % (np.abs(track.bbox_history[-1][0] - track.bbox_history[-1][2]) / im0.shape[0], np.abs(track.bbox_history[-1][1] - track.bbox_history[-1][3]) / im0.shape[1])
-                    
-                    # point_color = (0, 0, 255)
-                    # point_size = 5
-                    # cv2.circle(im0, (int(vnp[idx][0]), int(vnp[idx][1])), point_size, point_color, -1)
-                                        
-                with open(txt_path + '.txt', 'a') as f:
-                  f.write(txt_str)
-                  # print(txt_str)
                 
                 predict_obj = [index[0] for index in obj_list]
                 risk3, risk5, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx])
