@@ -201,10 +201,6 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
     config_file = "Yolov7ObjectTracking/ProjectConfig.yaml"
     config = parse_config(config_file)
     
-    video_mv_cap = VideoCap()
-    video_mv_cap.open(video_url)
-
-    
     bar = tqdm.tqdm(len(dataset))
     for path, img, im0s, vid_cap in dataset:
         bar.update(1)
@@ -232,16 +228,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
         # pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
         pred = non_max_suppression(pred, 0.25, 0.45)
         t3 = time_synchronized()
-
-        
-        
-        # flag, imgcap, motion_vector, _, _ = video_mv_cap.read()
-        # turn_angle = turn_detector.process(imgcap, motion_vector)
-        # print('n Turn_agle: ', turn_angle)
-        # anglefile.write(str(turn_angle) + '\n')
-        
-        
-        
+     
         # Process detections
         for i, det in enumerate(pred):  # detections per image
             idx = idx + 1
@@ -365,20 +352,12 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
                 risk3, risk5, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx])
                 # draw boxes for visualization
                 
-                if len(tracked_dets)>0:
-                    bbox_xyxy = tracked_dets[:,:4]
-                    identities = tracked_dets[:, 8]
-                    categories = tracked_dets[:, 4]
+                # if len(tracked_dets)>0:
+                #     bbox_xyxy = tracked_dets[:,:4]
+                #     identities = tracked_dets[:, 8]
+                #     categories = tracked_dets[:, 4]
                 
-                    cv2.imwrite(f'tam/{idx}.jpg', draw_boxes(im0, bbox_xyxy, risk3, obj_list, img_shape, identities))
-                #........................................................
-            #     print(tracked_dets[:,:])
-            # print('Tracked object: ', obj_list)
-            
-            # print('Risk Object: ',risk)
-
-            # Print time (inference + NMS)
-            # print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
+                #     cv2.imwrite(f'tam/{idx}.jpg', draw_boxes(im0, bbox_xyxy, risk3, obj_list, img_shape, identities))
 
             json_step_name = f'frame{idx}' 
             frame_info = {
