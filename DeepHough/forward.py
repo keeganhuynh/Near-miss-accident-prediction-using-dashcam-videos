@@ -38,6 +38,57 @@ if tmp != "" and tmp != CONFIGS["MISC"]["TMP"]:
 os.makedirs(CONFIGS["MISC"]["TMP"], exist_ok=True)
 logger = Logger(os.path.join(CONFIGS["MISC"]["TMP"], "log.txt"))
 
+def openVNPpath(path):
+  f = open(path, 'r')
+  vnp = []
+  for i in f:
+    num1, num2 = map(float, i.strip().split(','))
+    rounded_num1 = int(round(num1))
+    rounded_num2 = int(round(num2))
+    vnp.append([rounded_num1, rounded_num2])
+  return vnp
+
+def MaxRange(x, range=25):
+  x_values = np.arange(min(x), max(x), range)
+  bins = pd.cut(x, x_values)
+  counts = bins.value_counts().sort_index()
+  return (counts.idxmax().left + counts.idxmax().right)*0.5
+
+def fix_outliers_iqr(arr, ins, factor=1.5):
+    q1 = np.percentile(arr, 25)
+    q3 = np.percentile(arr, 75)
+    iqr = q3 - q1
+    lower_bound = q1 - factor * iqr
+    upper_bound = q3 + factor * iqr
+
+    outliers = arr[(arr < lower_bound) | (arr > upper_bound)]
+    non_outliers_median = np.median(arr[(arr >= lower_bound) & (arr <= upper_bound)])
+    # You can replace the outliers with a specific value or remove them:
+    # Replace outliers with the median or mean of the non-outlier values:
+    if (non_outliers_median == 0):
+      non_outliers_median = ins
+    arr_fixed = np.where((arr < lower_bound) | (arr > upper_bound) | (arr == 0), non_outliers_median, arr)
+
+    return arr_fixed
+
+def FixVNP(path):
+  vnp = openVNPpath(path)
+
+  x = [i[0] for i in vnp]
+  y = [i[1] for i in vnp]
+
+  x = np.array(x)
+  y = np.array(y)
+
+  newx = fix_outliers_iqr(x, MaxRange(x), factor=1.5)
+  newy = fix_outliers_iqr(y, MaxRange(y), factor=1.5)
+
+  vnps = []
+  for i in range(len(newx)):
+    vnps.append([int(newx[i]), int(newy[i])])
+
+  return vnp, vnps
+
 def VanishingPointDetection(output_path):
 
     # logger.info(args)
@@ -63,6 +114,15 @@ def VanishingPointDetection(output_path):
     print("Start testing.")
     
     iter_num = test(test_loader, model, output_path)
+
+    vnp, vnps = FixVNP(path = output_path)
+
+    f = open(output_path,'w')
+    for i in vnps:
+      line = str(i[0]) + ',' + str(i[1]) + '\n'
+      f.write(line)
+
+      
     print(iter_num, ' VNPs were detected')
     print("Done!")
 
