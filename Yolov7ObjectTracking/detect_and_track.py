@@ -26,7 +26,6 @@ from utils.torch_utils import select_device, load_classifier, \
 from utils.download_weights import download
 
 from ObjectSpeedEstimate import *
-from turn_detector import TurnDetector
 
 import numpy as np
 import math
@@ -35,8 +34,6 @@ import json
 #For SORT tracking
 from sort import *
 import skimage
-
-from mvextractor.videocap import VideoCap
 
 def parse_config(yaml_file):
     with open(yaml_file) as f:
@@ -195,8 +192,6 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
     
     camera_calibration = ObjectClibration(img_shape[1], img_shape[0], FOV)
     intrinsic_mat = camera_calibration.get_intrinsic_matrix()
-    
-    turn_detector = TurnDetector(intrinsic_mat)
     
     config_file = "Yolov7ObjectTracking/ProjectConfig.yaml"
     config = parse_config(config_file)
