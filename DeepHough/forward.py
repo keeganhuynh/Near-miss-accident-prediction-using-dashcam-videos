@@ -28,7 +28,7 @@ config = "DeepHough/config.yml"
 pretrain_path = "DeepHough/dht_r50_nkl_d97b97138.pth"
 
 assert os.path.isfile(config)
-CONFIGS = yaml.load(open(config))
+CONFIGS = yaml.safe_load(open(config))
 
 tmp = ""
 # merge configs
