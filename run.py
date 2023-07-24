@@ -112,9 +112,9 @@ if __name__ == '__main__':
     fps, frame_count = MakeInput(folderpath, vnp_output_path, videopath, stage=2)
     print(fps, frame_count)
 
-    print('\n====================================================\n')
-    print('KML File process, save velocity to: ', veclocity_path)
-    VelocityExtract(veclocity_path, KML_file_path, fps)
+    # print('\n====================================================\n')
+    # print('KML File process, save velocity to: ', veclocity_path)
+    # VelocityExtract(veclocity_path, KML_file_path, fps)
     
     print('\n====================================================\n')
     print('Trajectory, save metadata to: ', json_file_path)
