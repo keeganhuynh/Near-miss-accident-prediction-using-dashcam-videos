@@ -22,7 +22,7 @@ from DeepHough.dataloader import get_loader
 from DeepHough.model.network import Net
 from skimage.measure import label, regionprops
 from DeepHough.utils import reverse_mapping, visulize_mapping, edge_align, get_boundary_point
-
+import pandas as pd
 
 config = "DeepHough/config.yml"
 pretrain_path = "DeepHough/dht_r50_nkl_d97b97138.pth"
@@ -80,12 +80,13 @@ def FixVNP(path):
   x = np.array(x)
   y = np.array(y)
 
-  newx = fix_outliers_iqr(x, MaxRange(x), factor=1.5)
-  newy = fix_outliers_iqr(y, MaxRange(y), factor=1.5)
-
   vnps = []
-  for i in range(len(newx)):
-    vnps.append([int(newx[i]), int(newy[i])])
+  if (len(x) != 0):
+    newx = fix_outliers_iqr(x, MaxRange(x), factor=1.5)
+    newy = fix_outliers_iqr(y, MaxRange(y), factor=1.5)
+
+    for i in range(len(newx)):
+      vnps.append([int(newx[i]), int(newy[i])])
 
   return vnp, vnps
 
@@ -114,14 +115,6 @@ def VanishingPointDetection(output_path):
     print("Start testing.")
     
     iter_num = test(test_loader, model, output_path)
-
-    vnp, vnps = FixVNP(path = output_path)
-
-    f = open(output_path,'w')
-    for i in vnps:
-      line = str(i[0]) + ',' + str(i[1]) + '\n'
-      f.write(line)
-
       
     print(iter_num, ' VNPs were detected')
     print("Done!")

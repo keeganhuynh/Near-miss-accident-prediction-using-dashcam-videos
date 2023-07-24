@@ -188,7 +188,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
     traj_step = 5
     predict_step = 110
     object_track.append(Object(fps, id = 0))
-    model_path = '/content/drive/MyDrive/ADAS/lstm11s.pth'
+    model_path = 'lstm33s.pth'
     predictor = Trajectory(model_path, n_steps=5, n_features=1)
     #-------- -----------------------------
     FOV = (110,70)
@@ -317,12 +317,12 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
                 
                 # draw boxes for visualization
                 
-                # if len(tracked_dets)>0:
-                #     bbox_xyxy = tracked_dets[:,:4]
-                #     identities = tracked_dets[:, 8]
-                #     categories = tracked_dets[:, 4]
+                if len(tracked_dets)>0:
+                    bbox_xyxy = tracked_dets[:,:4]
+                    identities = tracked_dets[:, 8]
+                    categories = tracked_dets[:, 4]
                 
-                #     cv2.imwrite(f'tam/{idx}.jpg', draw_boxes(im0, bbox_xyxy, risk3, obj_list, img_shape, identities))
+                    cv2.imwrite(f'tam/{idx}.jpg', draw_boxes(im0, bbox_xyxy, risk3, obj_list, img_shape, identities))
 
             json_step_name = f'frame{idx}' 
             frame_info = {
