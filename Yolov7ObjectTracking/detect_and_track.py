@@ -314,6 +314,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
                 
                 predict_obj = [index[0] for index in obj_list]
                 risk3, risk5, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx])
+                
                 # draw boxes for visualization
                 
                 # if len(tracked_dets)>0:
