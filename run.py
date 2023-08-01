@@ -125,7 +125,7 @@ if __name__ == '__main__':
     print('Trajectory, save metadata to: ', json_file_path)
     print('\n====================================================\n')
     ins_matrix_info = [[FOV_hor, FOV_ver], CamHeight]
-    TrajectoryAndMakingVideo(videopath, vnp_output_path, veclocity_path, json_file_path, fps, (1280, 720))
+    TrajectoryAndMakingVideo(videopath, vnp_output_path, veclocity_path, json_file_path, fps, (1280, 720), ins_matrix_info) 
     
     risk_json_file = makeJson(frame_count, json_file_path, risk_json_path)
 
