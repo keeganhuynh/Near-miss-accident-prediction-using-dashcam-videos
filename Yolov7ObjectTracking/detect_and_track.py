@@ -98,7 +98,7 @@ def object_dict(id, cls, X, Y, Z, speed, appear, x, y):
   }
   return new_dict
 
-def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save_img=False):
+def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_matrix_info = [[110, 70], 2.0], save_img=False):
     weights = 'Yolov7ObjectTracking/yolov7.pt'
     source = file_source
     save_txt = True
@@ -106,8 +106,6 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
     save_img = True and not source.endswith('.txt')  # save inference images
     video_url = source
     print(video_url)
-
-    class_name = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light']
 
     #.... Initialize SORT .... 
     #......................... 
@@ -188,7 +186,8 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
     model_path = 'lstm33s.pth'
     predictor = Trajectory(model_path, n_steps=5, n_features=1)
     #-------- -----------------------------
-    FOV = (110,70)
+    CameraHeight = ins_matrix_info[1]
+    FOV = (ins_matrix_info[0][0], ins_matrix_info[0][1])
     
     camera_calibration = ObjectClibration(img_shape[1], img_shape[0], FOV)
     intrinsic_mat = camera_calibration.get_intrinsic_matrix()
@@ -262,11 +261,9 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
                 tracks = sort_tracker.getTrackers()
 
                 txt_str = ""
-                FOV = (110,70)
-                img_shape = (720,1280)
                 
                 #camera height setting
-                ego_car = uv_to_world((img_shape[1]//2,img_shape[0]) , 1.64, vnp[idx], img_shape, FOV)
+                ego_car = uv_to_world((img_shape[1]//2,img_shape[0]) , CameraHeight, vnp[idx], img_shape, FOV)
                 txt_str += "%i %i %i %i %i %i %i %f %i" % (0, 0, 0, 2, 0, img_shape[1]//2, img_shape[0], speed[idx], -1)
                 id, cls, X, Y, Z, x, y, spd, appear = 0, 0, 0, 2, 0, img_shape[1]//2, img_shape[0], speed[idx], -1
                 f_dict.append(object_dict(int(id), int(cls), float(X), float(Y), float(Z), float(spd), int(appear),x,y))
@@ -278,7 +275,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
                 for track in tracks:
                     object_coor = (track.centroidarr[-1][0],track.centroidarr[-1][1])
 
-                    coors = uv_to_world(object_coor, 2.0, vnp[idx], img_shape, FOV)
+                    coors = uv_to_world(object_coor, CameraHeight, vnp[idx], img_shape, FOV)
                     
                     objvec = -1.0
                     appear_step = 1
@@ -353,7 +350,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), save
       json.dump(final_json, f)
 
 
-def process(video_path, vnp_path, veclocity_path, json_save_path, fps, img_shape):
+def process(video_path, vnp_path, veclocity_path, json_save_path, fps, img_shape, ins_matrix_info):
     '''
       '/content/drive/MyDrive/ADAS/Runs/20211213110138_0_8/vnp.txt'
       /content/drive/MyDrive/ADAS/Runs/20211213110138_0_8/velocity.txt'
@@ -385,10 +382,10 @@ def process(video_path, vnp_path, veclocity_path, json_save_path, fps, img_shape
 
 
     with torch.no_grad():
-        detect(video_path, vnp, speed, json_save_path, img_shape)    
+        detect(video_path, vnp, speed, json_save_path, img_shape, ins_matrix_info)    
 
-def TrajectoryAndMakingVideo(video_path, vnp_path, veclocity_path, json_file_path, fps, img_shape):
-    process(video_path, vnp_path, veclocity_path, json_file_path, fps, img_shape)
+def TrajectoryAndMakingVideo(video_path, vnp_path, veclocity_path, json_file_path, fps, img_shape, ins_matrix_info):
+    process(video_path, vnp_path, veclocity_path, json_file_path, fps, img_shape, ins_matrix_info)
 
 if __name__ == '__main__':
     video_path = '/content/drive/MyDrive/ADAS/Runs/20211213110138_0_8/20211213110138_0_8.avi'

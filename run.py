@@ -15,6 +15,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--folderpath', help='')
 parser.add_argument('--videopath', help='')
 parser.add_argument('--KML_file_path', help='')
+
+parser.add_argument('--FOV_horizontal', type=int,  default=110, help='')
+parser.add_argument('--FOV_vertical', type=int,  default=70, help='')
+parser.add_argument('--CameraHeight', type=float,  default=2.0, help='')
 args = parser.parse_args()
 
 def ExtractVideo(img_path, frame_count, fps, output_path):
@@ -84,6 +88,7 @@ if __name__ == '__main__':
     folderpath = args.folderpath
     videopath = args.videopath
     KML_file_path = args.KML_file_path
+    FOV_hor, FOV_ver, CamHeight = args.FOV_horizontal, args.FOV_vertical, args.CameraHeight
 
 
     folder_name = folderpath + '/FullFrame'
@@ -119,9 +124,9 @@ if __name__ == '__main__':
     print('\n====================================================\n')
     print('Trajectory, save metadata to: ', json_file_path)
     print('\n====================================================\n')
+    ins_matrix_info = [[FOV_hor, FOV_ver], CamHeight]
     TrajectoryAndMakingVideo(videopath, vnp_output_path, veclocity_path, json_file_path, fps, (1280, 720))
     
     risk_json_file = makeJson(frame_count, json_file_path, risk_json_path)
 
     ExtractVideo('tam', frame_count, fps, video_path)
-
