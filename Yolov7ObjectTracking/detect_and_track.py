@@ -26,6 +26,7 @@ from utils.torch_utils import select_device, load_classifier, \
 from utils.download_weights import download
 
 from ObjectSpeedEstimate import *
+from turn_detector import TurnDetector #update turn detector
 
 import numpy as np
 import math
@@ -34,6 +35,7 @@ import json
 #For SORT tracking
 from sort import *
 import skimage
+from mvextractor.videocap import VideoCap #update turn detector
 
 def parse_config(yaml_file):
     with open(yaml_file) as f:
@@ -191,10 +193,17 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     
     camera_calibration = ObjectClibration(img_shape[1], img_shape[0], FOV)
     intrinsic_mat = camera_calibration.get_intrinsic_matrix()
-    
+    turn_detector = TurnDetector(intrinsic_mat) #update turn detector
+
     config_file = "Yolov7ObjectTracking/ProjectConfig.yaml"
     config = parse_config(config_file)
     
+    #update turn detector
+    video_mv_cap = VideoCap()
+    video_mv_cap.open(video_url)
+    #-----------------------------------
+
+
     bar = tqdm.tqdm(len(dataset))
     for path, img, im0s, vid_cap in dataset:
         bar.update(1)
@@ -222,7 +231,14 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
         # pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
         pred = non_max_suppression(pred, 0.25, 0.45)
         t3 = time_synchronized()
-     
+
+        #update turn detector
+        turn_angle = 0
+        flag, imgcap, motion_vector, _, _ = video_mv_cap.read()
+        turn_angle = turn_detector.process(imgcap, motion_vector)
+        # print('\nAngle: ', turn_angle)
+        #--------------------------------------------------------
+
         # Process detections
         for i, det in enumerate(pred):  # detections per image
             idx = idx + 1
@@ -321,7 +337,8 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
               'Object' : f_dict,
               'Risk_Object_3s' : risk3,
               'Risk_Object_5s' : risk5,
-              'Risk_Object_10s' : risk10
+              'Risk_Object_10s' : risk10,
+              'Turn_angle' : turn_angle
             }
             pp_json[json_step_name] = [frame_info]
 
