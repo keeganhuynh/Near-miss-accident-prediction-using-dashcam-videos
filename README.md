@@ -1,4 +1,4 @@
-HƯỚNG DẪN SỬ DỤNG ĐƯỢC GHI CỤ THỂ Ở FILE: README.pdf
+**The specific instructions are documented in the readme.pdf file.**
 
 **Requirement:**
 - !pip install tensorflow==2.12.0
