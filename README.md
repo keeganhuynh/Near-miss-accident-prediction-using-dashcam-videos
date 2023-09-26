@@ -1,4 +1,4 @@
-**The specific instructions are documented in the readme.pdf file.**
+**The specific instructions are documented in the README.pdf file.**
 
 **Requirement:**
 - !pip install tensorflow==2.12.0
