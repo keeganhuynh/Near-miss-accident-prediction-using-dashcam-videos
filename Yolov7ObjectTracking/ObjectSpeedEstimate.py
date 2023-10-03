@@ -1,3 +1,4 @@
+from sklearn import svm
 import numpy as np 
 import argparse
 import cv2
@@ -55,9 +56,14 @@ class Object:
         return (0,0)
 
 #model_path = '/content/drive/MyDrive/ADAS/.pth'
+#0 : SVM
+#1 : LSTM
 class Trajectory:
-  def __init__(self, model_path, n_steps, n_features):
-    self.model = pickle.load(open(model_path, 'rb'))
+  def __init__(self, model_path, n_steps=5, n_features=1, model_options=0):
+    if model_options == 1:
+      self.lstm_model = pickle.load(open(model_path, 'rb'))
+    if model_options == 0:
+      self.svm_model = pickle.load(open(model_path, 'rb'))
     self.n_steps = n_steps
     self.n_features = n_features
 
@@ -65,17 +71,29 @@ class Trajectory:
     yhat = None
     x = np.array(pos_obj)
     x_input = x.reshape((1, self.n_steps, self.n_features))
-    result = self.model.predict(x_input, verbose=0)
+    result = self.lstm_model.predict(x_input, verbose=0)
     return result[0]
+
+  def SVMPredict(self, pos_obj, window_size=5):
+    model = svm.SVR(kernel='linear')
+    
+    result = []
+    
+    for i in range(window_size):
+      input = np.array(pos_obj)
+      predictions = model.predict(input.reshape(1, -1))
+      result.append(predictions[0])
+      input_data.append(predictions[0])
+      input_data = input_data[1:]
+    
+    return result
 
   def TrajectoryPredict(self, obj_pos, traj_step, predict_step, ego_velocity=0, fps=11, ego_turn_angle=0):
       
-      arrx, arry, tracX, tracZ = obj_pos[0][-traj_step:], obj_pos[1][-traj_step:], [], []
+      arrx, arry = obj_pos[0][-traj_step:], obj_pos[1][-traj_step:]
 
-      UpdataPos = []
-
-      PredPosX = self.LSMTPredict(arrx)
-      PredPosZ = self.LSMTPredict(arry)
+      PredPosX = self.SVMPredict(arrx, predict_step)
+      PredPosZ = self.SVMPredict(arry, predict_step)
 
       risk = False
 
@@ -98,22 +116,14 @@ class Trajectory:
           obj_pos = object_track[obj_id].TakeHis(traj_step)
           #Ở đây mình có thể setting thêm một cái tham số appear để quyết định xem có detect nó hay không
           
+          predict_step = 11
+          PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
+          if (risk == True):
+              risk_obj_3s.append(obj_id)
+
           predict_step = 33
           PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
           if (risk == True):
               risk_obj_3s.append(obj_id)
-              
 
-
-          # predict_step = 55
-          # PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
-          # if (risk == True):
-          #     risk_obj_5s.append(obj_id)
-
-
-          # predict_step = 110
-          # PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
-          # if (risk == True):
-          #     risk_obj_10s.append(obj_id)
-              
       return risk_obj_3s, risk_obj_5s, risk_obj_10s

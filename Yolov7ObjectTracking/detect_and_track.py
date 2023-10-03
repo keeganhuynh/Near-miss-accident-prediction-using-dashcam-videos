@@ -185,9 +185,10 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     traj_step = 5
     predict_step = 110
     object_track.append(Object(fps, id = 0))
-    model_path = 'lstm33s.pth'
-    predictor = Trajectory(model_path, n_steps=5, n_features=1)
+    model_path = 'svm_model.pkl'
+    predictor = Trajectory(model_path)
     #-------- -----------------------------
+
     CameraHeight = ins_matrix_info[1]
     FOV = (ins_matrix_info[0][0], ins_matrix_info[0][1])
     
