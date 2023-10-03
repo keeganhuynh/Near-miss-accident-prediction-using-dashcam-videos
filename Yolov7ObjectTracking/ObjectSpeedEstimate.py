@@ -74,14 +74,12 @@ class Trajectory:
     result = self.lstm_model.predict(x_input, verbose=0)
     return result[0]
 
-  def SVMPredict(self, pos_obj, window_size=5):
-    model = svm.SVR(kernel='linear')
-    
+  def SVMPredict(self, pos_obj, window_size=5):    
     result = []
     
     for i in range(window_size):
       input = np.array(pos_obj)
-      predictions = model.predict(input.reshape(1, -1))
+      predictions = self.svm_model.predict(input.reshape(1, -1))
       result.append(predictions[0])
       input_data.append(predictions[0])
       input_data = input_data[1:]
