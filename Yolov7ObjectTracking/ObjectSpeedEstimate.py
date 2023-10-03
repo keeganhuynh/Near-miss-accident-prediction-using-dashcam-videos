@@ -77,8 +77,10 @@ class Trajectory:
   def SVMPredict(self, pos_obj, window_size=5):    
     result = []
     
+    input_data = pos_obj
+    
     for i in range(window_size):
-      input = np.array(pos_obj)
+      input = np.array(input_data)
       predictions = self.svm_model.predict(input.reshape(1, -1))
       result.append(predictions[0])
       input_data.append(predictions[0])
