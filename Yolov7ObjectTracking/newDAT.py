@@ -37,6 +37,23 @@ from ObjectSpeedEstimate import *
 from turn_detector import TurnDetector #update turn detector
 from mvextractor.videocap import VideoCap #update turn detector
 
+def object_dict(id, cls, X, Y, Z, speed, appear, x, y):
+  if (speed < 0):
+    speed = math.nan
+  new_dict = {
+    "id" : int(id),
+    "class" : int(cls),
+    "object_location" : [{
+        "X" : round(float(X),2),
+        "Y" : round(float(Y),2),
+        "Z" : round(float(Z),2),
+        'x' : x,
+        'y' : y
+    }],
+    "velocity" : round(speed,2),
+    "appear" : appear
+  }
+  return new_dict
 
 #............................... Bounding Boxes Drawing ............................
 """Function to Draw Bounding boxes"""
@@ -71,7 +88,7 @@ def draw_boxes(img, bbox, identities=None, categories=None, names=None, save_wit
 
 def detect(video_url, vnp, speed, json_file_path, img_shape = (720,1280), ins_matrix_info = [[110, 70], 2.0], fps = 11, save_img=False):
     source, weights, view_img, save_txt, imgsz, trace, colored_trk, save_bbox_dim, save_with_object_id= \
-        video_url, 'yolov7.pt', False, False, 640, True, True, False, False
+        video_url, 'Yolov7ObjectTracking/yolov7.pt', False, False, 640, True, True, False, False
     
     # save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
     # webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
@@ -99,6 +116,7 @@ def detect(video_url, vnp, speed, json_file_path, img_shape = (720,1280), ins_ma
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
     # Load model
+    print(weights)
     model = attempt_load(weights, map_location=device)  # load FP32 model
     stride = int(model.stride.max())  # model stride
     imgsz = check_img_size(imgsz, s=stride)  # check img_size
@@ -153,9 +171,9 @@ def detect(video_url, vnp, speed, json_file_path, img_shape = (720,1280), ins_ma
     
     
     #update turn detector
-    # turn_detector = TurnDetector(intrinsic_mat) #update turn detector
-    # video_mv_cap = VideoCap()
-    # video_mv_cap.open(source)
+    turn_detector = TurnDetector(intrinsic_mat) #update turn detector
+    video_mv_cap = VideoCap()
+    video_mv_cap.open(source)
     #-----------------------------------
     
     for path, img, im0s, vid_cap in dataset:
@@ -164,7 +182,6 @@ def detect(video_url, vnp, speed, json_file_path, img_shape = (720,1280), ins_ma
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
-
         # Warmup
         if device.type != 'cpu' and (old_img_b != img.shape[0] or old_img_h != img.shape[2] or old_img_w != img.shape[3]):
             old_img_b = img.shape[0]
@@ -173,21 +190,35 @@ def detect(video_url, vnp, speed, json_file_path, img_shape = (720,1280), ins_ma
             for i in range(3):
                 model(img, augment=True)[0]
 
+        
         # Inference
         t1 = time_synchronized()
         pred = model(img, augment=True)[0]
         t2 = time_synchronized()
+        
 
         # Apply NMS
         pred = non_max_suppression(pred, 0.25, 0.45)
         t3 = time_synchronized()
+        
+        #update turn detector
+        # turn_angle = 0
+        # flag, imgcap, motion_vector, _, _ = video_mv_cap.read()
+        # turn_angle = turn_detector.process(imgcap, motion_vector)
+        #--------------------------------------------------------
 
         # Apply Classifier
+        
+        
+
         if classify:
             pred = apply_classifier(pred, modelc, img, im0s)
+        
 
         # Process detections
         for i, det in enumerate(pred):  # detections per image
+            idx = idx + 1
+            
             p, s, im0, frame = path, '', im0s, getattr(dataset, 'frame', 0)
 
             p = Path(p)  # to Path
@@ -263,6 +294,9 @@ def detect(video_url, vnp, speed, json_file_path, img_shape = (720,1280), ins_ma
                     #     # Normalize coordinates
                     #     txt_str += "%i %i %f %f" % (track.id, track.detclass, track.centroidarr[-1][0] / im0.shape[1], track.centroidarr[-1][1] / im0.shape[0])
                     #     txt_str += "\n"
+                
+                predict_obj = [index[0] for index in obj_list]
+                risk3, risk5, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx])
 
                 # if len(tracked_dets)>0:
                 #     bbox_xyxy = tracked_dets[:,:4]
@@ -273,6 +307,34 @@ def detect(video_url, vnp, speed, json_file_path, img_shape = (720,1280), ins_ma
             # else: #SORT should be updated even with no detections
                 # tracked_dets = sort_tracker.update()
             #........................................................
+            
+            json_step_name = f'frame{idx}' 
+            frame_info = {
+              'Object' : f_dict,
+              'Risk_Object_3s' : risk3,
+              'Risk_Object_5s' : risk5,
+              'Risk_Object_10s' : risk10,
+              'Turn_angle' : 0
+            }
+            pp_json[json_step_name] = [frame_info]
+    
+    final_json = {
+        "Video":  [{
+                    "Height" : 720,
+                    "Width" : 1280,
+                    "FrameCount" : idx
+                  }],
+        "CameraFOV": [{
+                    "Horizontal" : 110,
+                    "Vertical" : 70
+                      }],
+        "FrameInfo": {}
+    }
+    final_json["FrameInfo"] = [pp_json]
+    json_save_path = json_file_path
+
+    with open(json_save_path, 'w') as f:
+      json.dump(final_json, f)
 
 def TrajectoryAndMakingVideo(video_url, vnp_path, veclocity_path, json_file_path, fps, img_shape, ins_matrix_info):
     
@@ -299,17 +361,16 @@ def TrajectoryAndMakingVideo(video_url, vnp_path, veclocity_path, json_file_path
     while (len(speed) < len(vnp)):
       speed = np.append(speed, last)
 
-    weights = 'yolov7.pt'
+    weights = 'Yolov7ObjectTracking/yolov7.pt'
     update = True
     
-    if not os.path.exists(''.join(weights)):
-        print('Model weights not found. Attempting to download now...')
-        download('./')
+    # if not os.path.exists(''.join(weights)):
+    #     print('Model weights not found. Attempting to download now...')
+    #     download('./')
 
     with torch.no_grad():
         if update:  # update all models (to fix SourceChangeWarning)
-            for weights in ['yolov7.pt']:
+            for weights in ['Yolov7ObjectTracking/yolov7.pt']:
                 detect(video_url, vnp, speed, json_file_path, img_shape, ins_matrix_info, fps)
-                strip_optimizer(weights)
         else:
             detect(video_url, vnp, speed, json_file_path, img_shape, ins_matrix_info, fps)
