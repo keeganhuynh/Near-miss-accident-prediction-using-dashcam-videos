@@ -121,9 +121,9 @@ class Trajectory:
           if (risk == True):
               risk_obj_3s.append(obj_id)
 
-          predict_step = 33
-          PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
-          if (risk == True):
-              risk_obj_3s.append(obj_id)
+          # predict_step = 33
+          # PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
+          # if (risk == True):
+          #     risk_obj_3s.append(obj_id)
 
       return risk_obj_3s, risk_obj_5s, risk_obj_10s

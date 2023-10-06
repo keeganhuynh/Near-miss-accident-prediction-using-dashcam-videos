@@ -104,7 +104,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     weights = 'Yolov7ObjectTracking/yolov7.pt'
     source = file_source
     save_txt = True
-    imgsz, trace, colored_trk, save_bbox_dim, save_with_object_id= 640, True, True, False, True
+    imgsz, trace, colored_trk, save_bbox_dim, save_with_object_id = 640, False, True, False, True
     save_img = True and not source.endswith('.txt')  # save inference images
     video_url = source
     print(video_url)
@@ -183,7 +183,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     fps = 11
     idx = -1
     traj_step = 5
-    predict_step = 110
+    predict_step = 11
     object_track.append(Object(fps, id = 0))
     model_path = 'svm_model.pkl'
     predictor = Trajectory(model_path)
@@ -234,9 +234,9 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
         t3 = time_synchronized()
 
         #update turn detector
-        turn_angle = 0
-        flag, imgcap, motion_vector, _, _ = video_mv_cap.read()
-        turn_angle = turn_detector.process(imgcap, motion_vector)
+        # turn_angle = 0
+        # flag, imgcap, motion_vector, _, _ = video_mv_cap.read()
+        # turn_angle = turn_detector.process(imgcap, motion_vector)
         # print('\nAngle: ', turn_angle)
         #--------------------------------------------------------
 
@@ -326,12 +326,12 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 
                 # draw boxes for visualization
                 
-                if len(tracked_dets)>0:
-                    bbox_xyxy = tracked_dets[:,:4]
-                    identities = tracked_dets[:, 8]
-                    categories = tracked_dets[:, 4]
+                # if len(tracked_dets)>0:
+                #     bbox_xyxy = tracked_dets[:,:4]
+                #     identities = tracked_dets[:, 8]
+                #     categories = tracked_dets[:, 4]
                 
-                    cv2.imwrite(f'tam/{idx}.jpg', draw_boxes(im0, bbox_xyxy, risk3, obj_list, img_shape, identities))
+                #     cv2.imwrite(f'tam/{idx}.jpg', draw_boxes(im0, bbox_xyxy, risk3, obj_list, img_shape, identities))
 
             json_step_name = f'frame{idx}' 
             frame_info = {
@@ -339,7 +339,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
               'Risk_Object_3s' : risk3,
               'Risk_Object_5s' : risk5,
               'Risk_Object_10s' : risk10,
-              'Turn_angle' : turn_angle
+              'Turn_angle' : 0
             }
             pp_json[json_step_name] = [frame_info]
 
@@ -356,10 +356,6 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
         "FrameInfo": {}
     }
     final_json["FrameInfo"] = [pp_json]
-
-    if save_txt or save_img or save_with_object_id:
-        s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''
-        #print(f"Results saved to {save_dir}{s}")
     
     print(f'Done. ({time.time() - t0:.3f}s)')
     
@@ -397,7 +393,6 @@ def process(video_path, vnp_path, veclocity_path, json_save_path, fps, img_shape
       speed = np.append(speed, last)
 
     print(len(speed))
-
 
     with torch.no_grad():
         detect(video_path, vnp, speed, json_save_path, img_shape, ins_matrix_info)    

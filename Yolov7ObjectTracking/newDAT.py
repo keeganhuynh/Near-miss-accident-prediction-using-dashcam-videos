@@ -208,8 +208,6 @@ def detect(video_url, vnp, speed, json_file_path, img_shape = (720,1280), ins_ma
         #--------------------------------------------------------
 
         # Apply Classifier
-        
-        
 
         if classify:
             pred = apply_classifier(pred, modelc, img, im0s)
