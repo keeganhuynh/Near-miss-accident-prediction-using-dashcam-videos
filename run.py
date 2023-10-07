@@ -24,32 +24,6 @@ parser.add_argument('--ImageWidth', type=float,  default=1280, help='')
 parser.add_argument('--ImageHeight', type=float,  default=720, help='')
 args = parser.parse_args()
 
-def ExtractVideo(img_path, frame_count, fps, output_path):
-  # Define the output video path
-  imgs = []
-
-  for i in range(frame_count):
-    try:
-      img = cv2.imread(img_path + f'/{i}.jpg')
-      imgs.append(img)
-    except:
-      print(f'No {i}.jpg')
-
-
-  first_image = (imgs[0])
-  frame_height, frame_width, _ = first_image.shape
-
-  # Define the video codec and create a VideoWriter object
-  fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-  out = cv2.VideoWriter(output_path, fourcc, fps, (frame_width, frame_height))
-
-  for frame in imgs:    
-      out.write(frame)
-      if cv2.waitKey(1) & 0xFF == ord('q'):
-          break
-  out.release()
-  cv2.destroyAllWindows()
-
 def makeJson(frame_count, data, risk_json_path):
   datajson = {}
   f = open(data)
@@ -133,5 +107,3 @@ if __name__ == '__main__':
     TrajectoryAndMakingVideo(videopath, vnp_output_path, veclocity_path, json_file_path, fps, (ImageHeight, ImageWidth), ins_matrix_info) 
     
     risk_json_file = makeJson(frame_count, json_file_path, risk_json_path)
-
-    ExtractVideo('tam', frame_count, fps, video_path)
