@@ -56,14 +56,23 @@ class Object:
         return (0,0)
 
 #model_path = '/content/drive/MyDrive/ADAS/.pth'
-#0 : SVM
-#1 : LSTM
+#0 : SVM : svm_model.pkl
+#1 : LSTM : lstm11s.pth
+#2 : Linear Regression : LR_model.pkl
 class Trajectory:
-  def __init__(self, model_path, n_steps=5, n_features=1, model_options=0):
+  def __init__(self, n_steps=5, n_features=1, model_options=2):
+    if model_options == 2:
+      model_path = 'LR_model.pkl'
+      self.lr_model = pickle.load(open(model_path, 'rb'))
+    
     if model_options == 1:
+      model_path = 'lstm11s.pth'
       self.lstm_model = pickle.load(open(model_path, 'rb'))
+
     if model_options == 0:
+      model_path = 'svm_model.pkl'
       self.svm_model = pickle.load(open(model_path, 'rb'))
+
     self.n_steps = n_steps
     self.n_features = n_features
 
@@ -87,13 +96,21 @@ class Trajectory:
       input_data = input_data[1:]
     
     return result
+  
+  def LRPredict(self, pos_obj):    
+    result = []
+    
+    input_data = np.array(pos_obj)
+    result = self.lr_model.predict([input_data])
+       
+    return result[0]
 
   def TrajectoryPredict(self, obj_pos, traj_step, predict_step, ego_velocity=0, fps=11, ego_turn_angle=0):
       
       arrx, arry = obj_pos[0][-traj_step:], obj_pos[1][-traj_step:]
 
-      PredPosX = self.SVMPredict(arrx, predict_step)
-      PredPosZ = self.SVMPredict(arry, predict_step)
+      PredPosX = self.LRPredict(arrx)
+      PredPosZ = self.LRPredict(arry)
 
       risk = False
 

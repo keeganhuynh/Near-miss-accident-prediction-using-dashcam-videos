@@ -185,8 +185,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     traj_step = 5
     predict_step = 11
     object_track.append(Object(fps, id = 0))
-    model_path = 'svm_model.pkl'
-    predictor = Trajectory(model_path)
+    predictor = Trajectory()
     #-------- -----------------------------
 
     CameraHeight = ins_matrix_info[1]
@@ -379,7 +378,7 @@ def process(video_path, vnp_path, veclocity_path, json_save_path, fps, img_shape
     for i in f:
       x = i[:-1].split(",")
       vnp.append([float(x[0]), float(x[1])])
-    vnp = np.array(vnp)
+    vnp = np.array(vnp)s
 
     f = open(veclocity_path, 'r')
     speed_ = []
