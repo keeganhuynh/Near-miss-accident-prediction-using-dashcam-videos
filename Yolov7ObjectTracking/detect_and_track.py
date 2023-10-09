@@ -37,11 +37,6 @@ from sort import *
 import skimage
 from mvextractor.videocap import VideoCap #update turn detector
 
-def parse_config(yaml_file):
-    with open(yaml_file) as f:
-        data = yaml.load(f, Loader=yaml.loader.SafeLoader)
-    return data
-
 #..................d............. Bounding Boxes Drawing ............................
 """Function to Draw Bounding boxes"""
 def draw_boxes(img, bbox, risk, predict_obj, img_shape, identities=None, categories=None, names=None, save_with_object_id=False, path=None,offset=(0, 0)):
@@ -194,13 +189,10 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     camera_calibration = ObjectClibration(img_shape[1], img_shape[0], FOV)
     intrinsic_mat = camera_calibration.get_intrinsic_matrix()
     turn_detector = TurnDetector(intrinsic_mat) #update turn detector
-
-    config_file = "Yolov7ObjectTracking/ProjectConfig.yaml"
-    config = parse_config(config_file)
     
     #update turn detector
-    video_mv_cap = VideoCap()
-    video_mv_cap.open(video_url)
+    # video_mv_cap = VideoCap()
+    # video_mv_cap.open(video_url)
     #-----------------------------------
 
 
@@ -222,15 +214,10 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 model(img, augment=False)[0]
 
         # Inference
-        t1 = time_synchronized()
         pred = model(img, augment=False)[0]
-        t2 = time_synchronized()
-
-        
         # Apply NMS
         # pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
         pred = non_max_suppression(pred, 0.25, 0.45)
-        t3 = time_synchronized()
 
         #update turn detector
         # turn_angle = 0
@@ -356,8 +343,6 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     }
     final_json["FrameInfo"] = [pp_json]
     
-    print(f'Done. ({time.time() - t0:.3f}s)')
-    
     json_save_path = json_file_path
     with open(json_save_path, 'w') as f:
       json.dump(final_json, f)
@@ -378,7 +363,7 @@ def process(video_path, vnp_path, veclocity_path, json_save_path, fps, img_shape
     for i in f:
       x = i[:-1].split(",")
       vnp.append([float(x[0]), float(x[1])])
-    vnp = np.array(vnp)s
+    vnp = np.array(vnp)
 
     f = open(veclocity_path, 'r')
     speed_ = []
