@@ -56,21 +56,22 @@ class Object:
         return (0,0)
 
 #model_path = '/content/drive/MyDrive/ADAS/.pth'
+#Yolov7ObjectTracking
 #0 : SVM : svm_model.pkl
 #1 : LSTM : lstm11s.pth
 #2 : Linear Regression : LR_model.pkl
 class Trajectory:
   def __init__(self, n_steps=5, n_features=1, model_options=2):
     if model_options == 2:
-      model_path = 'LR_model.pkl'
+      model_path = 'Yolov7ObjectTracking/LR_model.pkl'
       self.lr_model = pickle.load(open(model_path, 'rb'))
     
     if model_options == 1:
-      model_path = 'lstm11s.pth'
+      model_path = 'Yolov7ObjectTracking/lstm11s.pth'
       self.lstm_model = pickle.load(open(model_path, 'rb'))
 
     if model_options == 0:
-      model_path = 'svm_model.pkl'
+      model_path = 'Yolov7ObjectTracking/svm_model.pkl'
       self.svm_model = pickle.load(open(model_path, 'rb'))
 
     self.n_steps = n_steps
