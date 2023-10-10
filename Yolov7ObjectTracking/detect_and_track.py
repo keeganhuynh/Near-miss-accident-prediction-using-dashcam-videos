@@ -115,7 +115,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     #......................... 
     
     #........Turn angle.......
-    anglefile = open('angleann.txt', 'a')
+    # anglefile = open('angleann.txt', 'a')
     
     #........Rand Color for every trk.......
     rand_color_list = []
@@ -188,7 +188,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     
     camera_calibration = ObjectClibration(img_shape[1], img_shape[0], FOV)
     intrinsic_mat = camera_calibration.get_intrinsic_matrix()
-    turn_detector = TurnDetector(intrinsic_mat) #update turn detector
+    # turn_detector = TurnDetector(intrinsic_mat) #update turn detector
     
     #update turn detector
     # video_mv_cap = VideoCap()
