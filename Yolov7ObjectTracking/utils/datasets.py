@@ -157,14 +157,14 @@ class LoadImages:  # for inference
 
     def __iter__(self):
         self.count = 0
-        self.frame_counter = 0
+        self.frame_counter = -1
         return self
 
     def __next__(self):
         if self.count == self.nf:
             raise StopIteration
         path = self.files[self.count]
-
+        self.frame_counter += 1
         if self.video_flag[self.count]:
             # Read video
             self.mode = 'video'
