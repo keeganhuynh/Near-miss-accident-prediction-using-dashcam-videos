@@ -1,5 +1,5 @@
-from setup import SettingEnvironment
-SettingEnvironment()
+# from setup import SettingEnvironment
+# SettingEnvironment()
 from pathlib import Path
 from vnp import *
 from Yolov7ObjectTracking.detect_and_track import *
