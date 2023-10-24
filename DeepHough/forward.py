@@ -90,7 +90,7 @@ def FixVNP(path):
 
   return vnp, vnps
 
-def VanishingPointDetection(output_path):
+def VanishingPointDetection(output_path, frame_interval=1):
 
     # logger.info(args)
 
@@ -114,12 +114,12 @@ def VanishingPointDetection(output_path):
     print("Data loading done.")
     print("Start testing.")
     
-    iter_num = test(test_loader, model, output_path)
+    iter_num = test(test_loader, model, output_path, frame_interval)
       
     print(iter_num, ' VNPs were detected')
     print("Done!")
 
-def test(test_loader, model, path_myf):
+def test(test_loader, model, path_myf, frame_interval):
     # switch to evaluate mode
     model.eval()
 
@@ -174,7 +174,8 @@ def test(test_loader, model, path_myf):
             
             vn_point, previous = vnp(b_points, width=CONFIGS["FRAME"]["WIDTH"], height=CONFIGS["FRAME"]["HEIGHT"], previous_lop=previous)
             # print(join(visualize_save_path, names[0].split('/')[-1]), ' => ', vn_point, '\n')
-            f.write(str(vn_point[0])+','+str(vn_point[1])+'\n')
+            for i in range(frame_interval):
+                f.write(str(vn_point[0])+','+str(vn_point[1])+'\n')
             
             
             # plt.scatter(int(vn_point[0]), int(vn_point[1]), color='red', marker='o')

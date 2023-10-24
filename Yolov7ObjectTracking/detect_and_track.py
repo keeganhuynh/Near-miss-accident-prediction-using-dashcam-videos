@@ -39,7 +39,7 @@ from mvextractor.videocap import VideoCap #update turn detector
 
 #..................d............. Bounding Boxes Drawing ............................
 """Function to Draw Bounding boxes"""
-def draw_boxes(img, bbox, risk, predict_obj, img_shape, identities=None, categories=None, names=None, save_with_object_id=False, path=None,offset=(0, 0)):
+def draw_boxes(img, bbox, risk, predict_obj, img_shape, identities=None, categories=None, names=None, save_with_object_id=False, path=None, offset=(0, 0)):
     for i, box in enumerate(bbox):
         x1, y1, x2, y2 = [int(j) for j in box]
         x1 += offset[0]
@@ -95,7 +95,7 @@ def object_dict(id, cls, X, Y, Z, speed, appear, x, y):
   }
   return new_dict
 
-def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_matrix_info = [[110, 70], 2.0], save_img=False):
+def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_matrix_info = [[110, 70], 2.0], frame_interval=1, save_img=False):
     weights = 'Yolov7ObjectTracking/yolov7.pt'
     source = file_source
     save_txt = True
@@ -158,7 +158,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
 
     # Set Dataloader
     vid_path, vid_writer = None, None
-    dataset = LoadImages(source, img_size=imgsz, stride=stride)
+    dataset = LoadImages(source, f_interval=frame_interval, img_size=imgsz, stride=stride)
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
@@ -348,7 +348,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
       json.dump(final_json, f)
 
 
-def process(video_path, vnp_path, veclocity_path, json_save_path, fps, img_shape, ins_matrix_info):
+def process(video_path, vnp_path, veclocity_path, json_save_path, fps, img_shape, ins_matrix_info, frame_interval):
     '''
       '/content/drive/MyDrive/ADAS/Runs/20211213110138_0_8/vnp.txt'
       /content/drive/MyDrive/ADAS/Runs/20211213110138_0_8/velocity.txt'
@@ -379,10 +379,10 @@ def process(video_path, vnp_path, veclocity_path, json_save_path, fps, img_shape
     print(len(speed))
 
     with torch.no_grad():
-        detect(video_path, vnp, speed, json_save_path, img_shape, ins_matrix_info)    
+        detect(video_path, vnp, speed, json_save_path, img_shape, ins_matrix_info, frame_interval)    
 
-def TrajectoryAndMakingVideo(video_path, vnp_path, veclocity_path, json_file_path, fps, img_shape, ins_matrix_info):
-    process(video_path, vnp_path, veclocity_path, json_file_path, fps, img_shape, ins_matrix_info)
+def TrajectoryAndMakingVideo(video_path, vnp_path, veclocity_path, json_file_path, fps, img_shape, ins_matrix_info, frame_interval):
+    process(video_path, vnp_path, veclocity_path, json_file_path, fps, img_shape, ins_matrix_info, frame_interval)
 
 if __name__ == '__main__':
     video_path = '/content/drive/MyDrive/ADAS/Runs/20211213110138_0_8/20211213110138_0_8.avi'

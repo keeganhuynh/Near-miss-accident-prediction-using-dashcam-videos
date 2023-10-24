@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     print('Set up Finished')
     
-
+    frame_interval = 3
     # Result
     vnp_output_path = folderpath + '/vnp.txt'
     json_file_path = folderpath + '/output.json'
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     print('\n====================================================\n')
     print('Save VNP txt to : ', vnp_output_path)
     fps, frame_count = 14, 224
-    fps, frame_count = MakeInput(folderpath, vnp_output_path, videopath, stage=2)
+    fps, frame_count = MakeInput(folderpath, vnp_output_path, videopath, frame_interval, stage=2)
     print(fps, frame_count)
 
     # print('\n====================================================\n')
@@ -104,6 +104,6 @@ if __name__ == '__main__':
     print('Trajectory, save metadata to: ', json_file_path)
     print('\n====================================================\n')
     ins_matrix_info = [[FOV_hor, FOV_ver], CamHeight]
-    TrajectoryAndMakingVideo(videopath, vnp_output_path, veclocity_path, json_file_path, fps, (ImageHeight, ImageWidth), ins_matrix_info) 
+    TrajectoryAndMakingVideo(videopath, vnp_output_path, veclocity_path, json_file_path, fps, (ImageHeight, ImageWidth), ins_matrix_info, frame_interval) 
     
     risk_json_file = makeJson(frame_count, json_file_path, risk_json_path)
