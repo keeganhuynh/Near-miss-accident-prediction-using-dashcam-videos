@@ -6,7 +6,7 @@ from Yolov7ObjectTracking.detect_and_track import *
 from SpeedETool import *
 import json
 import cv2
-
+import time
 
 import argparse
 
@@ -61,6 +61,7 @@ def makeJson(frame_count, data, risk_json_path):
   print('save file to risk.json')
 
 if __name__ == '__main__':
+    tstart = time.time()
     # Input
     folderpath = args.folderpath
     videopath = args.videopath
@@ -68,7 +69,6 @@ if __name__ == '__main__':
     FOV_hor, FOV_ver, CamHeight = args.FOV_horizontal, args.FOV_vertical, args.CameraHeight
     ImageWidth = args.ImageWidth
     ImageHeight = args.ImageHeight
-
 
     folder_name = folderpath + '/FullFrame'
     path = Path(folder_name)
@@ -93,7 +93,9 @@ if __name__ == '__main__':
     print('\n====================================================\n')
     print('Save VNP txt to : ', vnp_output_path)
     fps, frame_count = 14, 224
+    t00 = time.time()
     fps, frame_count = MakeInput(folderpath, vnp_output_path, videopath, frame_interval, stage=2)
+    t01 = time.time()
     print(fps, frame_count)
 
     # print('\n====================================================\n')
@@ -104,6 +106,20 @@ if __name__ == '__main__':
     print('Trajectory, save metadata to: ', json_file_path)
     print('\n====================================================\n')
     ins_matrix_info = [[FOV_hor, FOV_ver], CamHeight]
+    t10 = time.time()
     TrajectoryAndMakingVideo(videopath, vnp_output_path, veclocity_path, json_file_path, fps, (ImageHeight, ImageWidth), ins_matrix_info, frame_interval) 
-    
+    t11 = time.time()
+
+    t20 = time.time()
     risk_json_file = makeJson(frame_count, json_file_path, risk_json_path)
+    t21 = time.time()
+    tend = time.time()
+    print('\n----------------------------------------')
+    print('Frame skip: ', frame_interval)
+    print('----------------------------------------')
+    print('Total: ', tend - tstart)
+    print('Frame Extract + Deephough: \t', t01 - t00)
+    print('Tracjectory: \t', t11 - t10)
+    print('Json generation: \t', t21 - t20)
+    print('----------------------------------------')
+    print('FPS: ', round(frame_count/(tend - tstart),2))
