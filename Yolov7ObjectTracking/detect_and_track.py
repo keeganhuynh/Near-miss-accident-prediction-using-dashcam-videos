@@ -319,15 +319,17 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 
                 #     cv2.imwrite(f'tam/{idx}.jpg', draw_boxes(im0, bbox_xyxy, risk3, obj_list, img_shape, identities))
 
-            json_step_name = f'frame{idx}' 
-            frame_info = {
-              'Object' : f_dict,
-              'Risk_Object_3s' : risk3,
-              'Risk_Object_5s' : risk5,
-              'Risk_Object_10s' : risk10,
-              'Turn_angle' : 0
-            }
-            pp_json[json_step_name] = [frame_info]
+            for step in range(frame_interval):
+                frame_index = idx*frame_interval + step
+                json_step_name = f'frame{frame_index}' 
+                frame_info = {
+                  'Object' : f_dict,
+                  'Risk_Object_3s' : risk3,
+                  'Risk_Object_5s' : risk5,
+                  'Risk_Object_10s' : risk10,
+                  'Turn_angle' : 0
+                }
+                pp_json[json_step_name] = [frame_info]
 
     final_json = {
         "Video":  [{

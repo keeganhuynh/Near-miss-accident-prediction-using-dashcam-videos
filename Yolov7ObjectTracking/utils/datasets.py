@@ -182,20 +182,24 @@ class LoadImages:  # for inference
             self.frame += 1
             # print(f'video {self.count + 1}/{self.nf} ({self.frame}/{self.nframes}) {path}: ', end='')
 
-        else:
+        # else:
             # # Read image
             # self.count += 1
             # img0 = cv2.imread(path)  # BGR
             # assert img0 is not None, 'Image Not Found ' + path
             # #print(f'image {self.count}/{self.nf} {path}: ', end='')
-            if self.frame_counter % self.frame_interval == 0:
-                self.count += 1
-                img0 = cv2.imread(path)  # BGR
-                assert img0 is not None, 'Image Not Found ' + path
-            else:
-                self.count += 1
-                img0 = None
-                self.frame_counter += 1
+            # if self.frame_counter % self.frame_interval == 0:
+            #     self.count += 1
+            #     img0 = cv2.imread(path)  # BGR
+            #     assert img0 is not None, 'Image Not Found ' + path
+            # else:
+            #     self.count += 1
+            #     img0 = None
+            #     self.frame_counter += 1
+        
+        if self.frame_counter % self.frame_interval != 0:
+            return self.__next__()
+        
         if img0 is not None:
             # Padded resize
             img = letterbox(img0, self.img_size, stride=self.stride)[0]
