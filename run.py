@@ -4,6 +4,7 @@ from pathlib import Path
 from vnp import *
 from Yolov7ObjectTracking.detect_and_track import *
 from SpeedETool import *
+from RVPextract import RVNP_extractor
 import json
 import cv2
 import time
@@ -15,6 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--folderpath', help='')
 parser.add_argument('--videopath', help='')
 parser.add_argument('--KML_file_path', help='')
+parser.add_argument('--vnp_det_option', type=int, default=0, help='0-Deephough, 1-RVNP')
 
 parser.add_argument('--FOV_horizontal', type=int,  default=110, help='')
 parser.add_argument('--FOV_vertical', type=int,  default=70, help='')
@@ -69,6 +71,7 @@ if __name__ == '__main__':
     FOV_hor, FOV_ver, CamHeight = args.FOV_horizontal, args.FOV_vertical, args.CameraHeight
     ImageWidth = args.ImageWidth
     ImageHeight = args.ImageHeight
+    vnp_det_option = args.vnp_det_option
 
     folder_name = folderpath + '/FullFrame'
     path = Path(folder_name)
@@ -92,9 +95,18 @@ if __name__ == '__main__':
     print('\nSAVE RESULT TO FOLDER: ', folderpath)
     print('\n====================================================\n')
     print('Save VNP txt to : ', vnp_output_path)
+    
     fps, frame_count = 14, 224
+    
     t00 = time.time()
-    fps, frame_count = MakeInput(folderpath, vnp_output_path, videopath, frame_interval, stage=2)
+    
+    if vnp_det_option == 0:
+      fps, frame_count = MakeInput(folderpath, vnp_output_path, videopath, frame_interval, stage=2)
+    
+    elif vnp_det_option == 1:
+      extractor = RVNP_extractor(videopath, frame_interval)
+      fps, frame_count = extractor.R_VP_detection(vnp_output_path)
+    
     t01 = time.time()
     print(fps, frame_count)
 

@@ -60,14 +60,17 @@ def FirstStage(folderpath, output_path, videopath, stage, frame_interval):
     if (stage == 0):
       print('===============video processing=================')
       fps, frame_count = ProcessVideo(folderpath, videopath, frame_interval)
+    
     if (stage == 1):
       print('===============Run deep hough=================')
       VanishingPointDetection(output_path, frame_interval)
+    
     if (stage == 2):
       print('===============video processing=================')
       fps, frame_count = ProcessVideo(folderpath, videopath, frame_interval)
       print('===============Run deep hough=================')
       VanishingPointDetection(output_path, frame_interval)
+    
     return fps, frame_count
     
 
