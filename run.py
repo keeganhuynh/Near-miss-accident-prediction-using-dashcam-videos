@@ -1,7 +1,6 @@
 # from setup import SettingEnvironment
 # SettingEnvironment()
 from pathlib import Path
-from vnp import *
 from Yolov7ObjectTracking.detect_and_track import *
 from SpeedETool import *
 from RVPextract import RVNP_extractor
@@ -101,6 +100,7 @@ if __name__ == '__main__':
     t00 = time.time()
     
     if vnp_det_option == 0:
+      from vnp import MakeInput
       fps, frame_count = MakeInput(folderpath, vnp_output_path, videopath, frame_interval, stage=2)
     
     elif vnp_det_option == 1:

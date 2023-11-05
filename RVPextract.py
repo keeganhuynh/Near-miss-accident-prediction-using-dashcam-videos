@@ -6,6 +6,7 @@ import matplotlib.image as mpimg
 import math
 import random
 import time
+from tqdm import tqdm
 
 def VisuallizeMV(P0, Pk, image):
     print(len(P0))
@@ -272,6 +273,8 @@ class RVNP_extractor:
         P0_corner = cv2.goodFeaturesToTrack(frame_list[initial_frame], maxCorners=nt0, qualityLevel=0.01, minDistance=10).reshape(-1,2)
         P0k_corner = []
         
+        pbar = tqdm(total=frame_count, position=0, leave=True) #processing bar
+
         while (True):    
             while (True):
                 P_0, P_k = self.mv_detection(initial_frame, k, P0_corner, P0k_corner)
@@ -311,8 +314,10 @@ class RVNP_extractor:
             # print(f'\n{RVP}\n')
 
             k += 1
+            pbar.update(1)
             P0_corner = P_0
             P0k_corner = P_k
+            
             if initial_frame + k >= frame_count - 1:
                 self.SaveTxt(txt, save_path)
                 return self.fps, self.frame_count
