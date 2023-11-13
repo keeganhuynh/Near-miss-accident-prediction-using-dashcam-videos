@@ -35,7 +35,7 @@ import json
 #For SORT tracking
 from sort import *
 import skimage
-from mvextractor.videocap import VideoCap #update turn detector
+# from mvextractor.videocap import VideoCap #update turn detector
 
 #..................d............. Bounding Boxes Drawing ............................
 """Function to Draw Bounding boxes"""

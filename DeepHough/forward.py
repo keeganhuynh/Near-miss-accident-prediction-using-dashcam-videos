@@ -22,7 +22,7 @@ from DeepHough.dataloader import get_loader
 from DeepHough.model.network import Net
 from skimage.measure import label, regionprops
 from DeepHough.utils import reverse_mapping, visulize_mapping, edge_align, get_boundary_point
-from RVPextract import R_VP_detection
+from RVPextract import RVNP_extractor
 import pandas as pd
 
 config = "DeepHough/config.yml"
@@ -173,11 +173,13 @@ def test(test_loader, model, path_myf, frame_interval, video_path):
                 (x1, y1), (x2, y2) = get_boundary_point(y1, x1, angle, size[0], size[1])
                 b_points[i] = (y1, x1, y2, x2)
             
-            vn_point, previous = vnp(b_points, width=CONFIGS["FRAME"]["WIDTH"], height=CONFIGS["FRAME"]["HEIGHT"], previous_lop=previous\
-                                     path=video_path, frame_iter=frame_interval, current_frame=frame_interval*index, fill_with_rvnp=False)
+            vn_point, previous, flag = vnp(b_points, width=CONFIGS["FRAME"]["WIDTH"], height=CONFIGS["FRAME"]["HEIGHT"], previous_lop=previous,\
+                                     path=video_path, frame_iter=frame_interval, current_frame=index, fill_with_rvnp=False)
+            # print(index)
             # print(join(visualize_save_path, names[0].split('/')[-1]), ' => ', vn_point, '\n')
             for i in range(frame_interval):
-                f.write(str(vn_point[0])+','+str(vn_point[1])+'\n')
+                # f.write(str(vn_point[0])+','+str(vn_point[1])+'\n')
+                f.write(str(vn_point[0])+','+str(vn_point[1])+','+str(flag)+'\n')
             
             
             # plt.scatter(int(vn_point[0]), int(vn_point[1]), color='red', marker='o')
@@ -194,7 +196,6 @@ def test(test_loader, model, path_myf, frame_interval, video_path):
             #     #cv2.imwrite(join(visualize_save_path, names[0].split('/')[-1].split('.')[0]+'_align.png'), vis)
             #     np_data = np.array(b_points)
             #     np.save(join(visualize_save_path, names[0].split('/')[-1].split('.')[0]+'_align'), np_data)
-            ntime += (time.time() - t)
             bar.update(1)
             index += 1
     #print('forward time for total images: %.6f' % ftime)
@@ -271,7 +272,7 @@ def vnp(b_points, width, height, previous_lop, path, frame_iter=1, current_frame
     p0 = 0
     p1 = 0
     itersect_point = set_intersect(b_points)
-    
+    flag = False
     
     scale = CONFIGS["FRAME"]["SCALE"]
     cut_height = height/scale #config
@@ -290,11 +291,14 @@ def vnp(b_points, width, height, previous_lop, path, frame_iter=1, current_frame
                 p0, p1 = (p_0/len(previous_lop),p_1/len(previous_lop)+cut_height)
             next_previous_lop = previous_lop
         else:
-            detector = RVNP_extractor(video_path=path, skip_frame=frame_iter, exac_fr=current_frame)
+            detector = RVNP_extractor(video_path=path, skip_frame=frame_iter)
             p0, p1 = detector.R_VP_detection(save_path='', initial_frame=current_frame, end_frame=current_frame+1, single_fr=True)
-            next_previous_lop 
+            next_previous_lop = [p0, p1]
+            flag = True
+            
     
     if (ls_itersect_point != []):
+        
         p_0 = 0
         p_1 = 0
         for i in ls_itersect_point:
@@ -303,7 +307,7 @@ def vnp(b_points, width, height, previous_lop, path, frame_iter=1, current_frame
             p0, p1 = (p_0/len(ls_itersect_point),p_1/len(ls_itersect_point)+cut_height)
         next_previous_lop = ls_itersect_point
     
-    return (p0,p1), next_previous_lop
+    return (p0,p1), next_previous_lop, flag
    
 if __name__ == '__main__':
     output_path = '/content/drive/MyDrive/ADAS/Runs/20211213110138_0_8/vnp.txt'
