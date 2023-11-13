@@ -307,7 +307,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                     f_dict.append(object_dict(int(id), int(cls), float(X), float(Y), float(Z), float(spd), int(appear),x,y))
                 
                 predict_obj = [index[0] for index in obj_list]
-                risk1, risk3, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx], fps)
+                risk1, risk3, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx])
                 
                 # draw boxes for visualization
                 
