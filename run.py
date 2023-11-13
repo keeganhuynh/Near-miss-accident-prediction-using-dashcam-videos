@@ -32,19 +32,19 @@ def makeJson(frame_count, data, risk_json_path):
 
   for i in range(frame_count):  
     frame_info = []
-    risk3s,  risk5s, risk10s = [], [], []
+    risk1s,  risk3s, risk10s = [], [], []
 
+    risk_obj_1s = [int(obj_id) for obj_id in data['FrameInfo'][0][f'frame{i}'][0]['Risk_Object_1s']]
+    for id in risk_obj_1s:
+      for obj in data['FrameInfo'][0][f'frame{i}'][0]['Object']:
+        if (obj['id'] == id):
+          risk1s.append({'id':id, 'object_location':obj['object_location']})
+    
     risk_obj_3s = [int(obj_id) for obj_id in data['FrameInfo'][0][f'frame{i}'][0]['Risk_Object_3s']]
     for id in risk_obj_3s:
       for obj in data['FrameInfo'][0][f'frame{i}'][0]['Object']:
         if (obj['id'] == id):
           risk3s.append({'id':id, 'object_location':obj['object_location']})
-    
-    risk_obj_5s = [int(obj_id) for obj_id in data['FrameInfo'][0][f'frame{i}'][0]['Risk_Object_5s']]
-    for id in risk_obj_5s:
-      for obj in data['FrameInfo'][0][f'frame{i}'][0]['Object']:
-        if (obj['id'] == id):
-          risk5s.append({'id':id, 'object_location':obj['object_location']})
     
     risk_obj_10s = [int(obj_id) for obj_id in data['FrameInfo'][0][f'frame{i}'][0]['Risk_Object_10s']]
     for id in risk_obj_10s:
@@ -52,7 +52,7 @@ def makeJson(frame_count, data, risk_json_path):
         if (obj['id'] == id):
           risk10s.append({'id':id, 'object_location':obj['object_location']})
 
-    frame_info.append({'risk3s':risk3s, 'risk5s':risk5s, 'risk10s':risk10s})
+    frame_info.append({'risk1s':risk1s, 'risk3s':risk3s, 'risk10s':risk10s})
     
     datajson[f'frame{i}'] = frame_info
 

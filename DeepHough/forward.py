@@ -115,9 +115,13 @@ def VanishingPointDetection(output_path, video_path, frame_interval=1):
     print("Data loading done.")
     print("Start testing.")
     
-    iter_num = test(test_loader, model, output_path, frame_interval, video_path)
-      
-    print(iter_num, ' VNPs were detected')
+    index, iter_num = test(test_loader, model, output_path, frame_interval, video_path)
+    if index / iter_num < 0.5:
+      print('********************************************************************\n')
+      print(f'WARNING: just {index}/{iter_num} was detect')
+      print('\n********************************************************************')
+    else:
+      print(index, ' VNPs were detected')
     print("Done!")
 
 def test(test_loader, model, path_myf, frame_interval, video_path):
@@ -180,7 +184,8 @@ def test(test_loader, model, path_myf, frame_interval, video_path):
             for i in range(frame_interval):
                 # f.write(str(vn_point[0])+','+str(vn_point[1])+'\n')
                 f.write(str(vn_point[0])+','+str(vn_point[1])+','+str(flag)+'\n')
-            
+            if flag == False:
+              index += 1
             
             # plt.scatter(int(vn_point[0]), int(vn_point[1]), color='red', marker='o')
 
@@ -197,11 +202,11 @@ def test(test_loader, model, path_myf, frame_interval, video_path):
             #     np_data = np.array(b_points)
             #     np.save(join(visualize_save_path, names[0].split('/')[-1].split('.')[0]+'_align'), np_data)
             bar.update(1)
-            index += 1
+            
     #print('forward time for total images: %.6f' % ftime)
     #print('post-processing time for total images: %.6f' % ntime)
     #return ftime + ntime
-    return iter_num
+    return index, iter_num
 
 def get_line(p1, p2):
     y1 = p1[0]
@@ -282,23 +287,17 @@ def vnp(b_points, width, height, previous_lop, path, frame_iter=1, current_frame
     next_previous_lop = []
    
     if (ls_itersect_point == []):
-        if fill_with_rvnp == False:
-            p_0 = 0
-            p_1 = 0
-            for i in previous_lop:
-                p_0 = p_0 + i[0]
-                p_1 = p_1 + i[1]
-                p0, p1 = (p_0/len(previous_lop),p_1/len(previous_lop)+cut_height)
-            next_previous_lop = previous_lop
-        else:
-            detector = RVNP_extractor(video_path=path, skip_frame=frame_iter)
-            p0, p1 = detector.R_VP_detection(save_path='', initial_frame=current_frame, end_frame=current_frame+1, single_fr=True)
-            next_previous_lop = [p0, p1]
-            flag = True
+        flag = True
+        p_0 = 0
+        p_1 = 0
+        for i in previous_lop:
+            p_0 = p_0 + i[0]
+            p_1 = p_1 + i[1]
+            p0, p1 = (p_0/len(previous_lop),p_1/len(previous_lop)+cut_height)
+        next_previous_lop = previous_lop
             
     
     if (ls_itersect_point != []):
-        
         p_0 = 0
         p_1 = 0
         for i in ls_itersect_point:
