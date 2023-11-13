@@ -95,7 +95,7 @@ def object_dict(id, cls, X, Y, Z, speed, appear, x, y):
   }
   return new_dict
 
-def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_matrix_info = [[110, 70], 2.0], frame_interval=1, save_img=False):
+def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_matrix_info = [[110, 70], 2.0], frame_interval=1, fps=15, save_img=False):
     weights = 'Yolov7ObjectTracking/yolov7.pt'
     source = file_source
     save_txt = True
@@ -175,12 +175,11 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     #Tracking -----------------------------
     tracked = []
     object_track = []
-    fps = 11
     idx = -1
     traj_step = 5
     predict_step = 11
     object_track.append(Object(fps, id = 0))
-    predictor = Trajectory()
+    predictor = Trajectory(ttfps=fps, frame_skip=frame_interval)
     #-------- -----------------------------
 
     CameraHeight = ins_matrix_info[1]
@@ -308,7 +307,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                     f_dict.append(object_dict(int(id), int(cls), float(X), float(Y), float(Z), float(spd), int(appear),x,y))
                 
                 predict_obj = [index[0] for index in obj_list]
-                risk3, risk5, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx])
+                risk1, risk3, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx], fps)
                 
                 # draw boxes for visualization
                 
@@ -324,8 +323,8 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 json_step_name = f'frame{frame_index}' 
                 frame_info = {
                   'Object' : f_dict,
-                  'Risk_Object_3s' : risk3,
-                  'Risk_Object_5s' : risk5,
+                  'Risk_Object_3s' : risk1,
+                  'Risk_Object_5s' : risk3,
                   'Risk_Object_10s' : risk10,
                   'Turn_angle' : 0
                 }
@@ -381,7 +380,7 @@ def process(video_path, vnp_path, veclocity_path, json_save_path, fps, img_shape
     print(len(speed))
 
     with torch.no_grad():
-        detect(video_path, vnp, speed, json_save_path, img_shape, ins_matrix_info, frame_interval)    
+        detect(video_path, vnp, speed, json_save_path, img_shape, ins_matrix_info, frame_interval, fps)    
 
 def TrajectoryAndMakingVideo(video_path, vnp_path, veclocity_path, json_file_path, fps, img_shape, ins_matrix_info, frame_interval):
     process(video_path, vnp_path, veclocity_path, json_file_path, fps, img_shape, ins_matrix_info, frame_interval)

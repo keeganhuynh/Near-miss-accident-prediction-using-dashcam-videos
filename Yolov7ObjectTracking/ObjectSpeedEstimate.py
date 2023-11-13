@@ -6,12 +6,13 @@ import json
 import pickle
 
 class Object:
-    def __init__(self, fps, id):
+    def __init__(self, fps, id, frame_skip=1):
         self.fps = fps
         self.id = id
         self.speed = None
         self.his = []
         self.step = 0
+        self.frame_skip = frame_skip
     
     def TakeHis(self, traj_step):
       posx, posz = [], []
@@ -23,7 +24,7 @@ class Object:
 
     def update_his(self, location):
       self.step += 1
-      if (len(self.his) == int(self.fps)):
+      if (len(self.his) == int(self.fps/self.frame_skip)):
         self.his = self.his[1:]
       self.his.append(location)
 
@@ -33,7 +34,7 @@ class Object:
     def speed_predict(self, ego_speed):
         speed = []
         
-        count = min(int(self.fps), len(self.his))    
+        count = min(int(self.fps/self.frame_skip), len(self.his))    
         
         step = 5
         
@@ -43,11 +44,11 @@ class Object:
           dis = np.sqrt((self.his[i+step][0]-self.his[i][0])**2 + (self.his[i+step][1]-self.his[i][1])**2)
           
           if (self.his[i+step][0] - self.his[i+step][0] >= 0.0): 
-            speed_per_time = dis*(float(self.fps))/float(step)
+            speed_per_time = dis*(float(self.fps/self.frame_skip))/float(step)
             speed.append(speed_per_time + ego_speed)
 
           if (self.his[i+step][0] - self.his[i+step][0] < 0.0):
-            speed_per_time = dis*(float(self.fps))/float(step)
+            speed_per_time = dis*(float(self.fps/self.frame_skip))/float(step)
             speed.append(speed_per_time - ego_speed)
              
         return float(sum(speed)/len(speed))
@@ -61,7 +62,7 @@ class Object:
 #1 : LSTM : lstm11s.pth
 #2 : Linear Regression : LR_model.pkl
 class Trajectory:
-  def __init__(self, n_steps=5, n_features=1, model_options=2):
+  def __init__(self, n_steps=5, n_features=1, model_options=2, ttfps=15, frame_skip=1):
     if model_options == 2:
       model_path = 'Yolov7ObjectTracking/LR_model.pkl'
       self.lr_model = pickle.load(open(model_path, 'rb'))
@@ -76,6 +77,8 @@ class Trajectory:
 
     self.n_steps = n_steps
     self.n_features = n_features
+    self.ttfps = ttfps
+    self.frame_skip = frame_skip
 
   def LSMTPredict(self, pos_obj):
     yhat = None
@@ -126,22 +129,28 @@ class Trajectory:
   def PredictRisk(self, frame_id, obj_list, traj_step, predict_step, object_track, Ego_speed):
       obj_list = obj_list[1:]
       
+      risk_obj_1s = []
       risk_obj_3s = []
-      risk_obj_5s = []
       risk_obj_10s = []
 
       for obj_id in obj_list:
           obj_pos = object_track[obj_id].TakeHis(traj_step)
           #Ở đây mình có thể setting thêm một cái tham số appear để quyết định xem có detect nó hay không
           
-          predict_step = 11
+          predict_step = 1 * int(self.ttfps/self.frame_skip)
+          PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
+          if (risk == True):
+              risk_obj_1s.append(obj_id)
+
+          predict_step = 3 * int(self.ttfps/self.frame_skip)
           PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
           if (risk == True):
               risk_obj_3s.append(obj_id)
+          
+          predict_step = 10 * int(self.ttfps/self.frame_skip)
+          PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
+          if (risk == True):
+              risk_obj_10s.append(obj_id)
 
-          # predict_step = 33
-          # PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
-          # if (risk == True):
-          #     risk_obj_3s.append(obj_id)
 
-      return risk_obj_3s, risk_obj_5s, risk_obj_10s
+      return risk_obj_1s, risk_obj_3s, risk_obj_10s
