@@ -323,8 +323,8 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 json_step_name = f'frame{frame_index}' 
                 frame_info = {
                   'Object' : f_dict,
-                  'Risk_Object_3s' : risk1,
-                  'Risk_Object_5s' : risk3,
+                  'Risk_Object_1s' : risk1,
+                  'Risk_Object_3s' : risk3,
                   'Risk_Object_10s' : risk10,
                   'Turn_angle' : 0
                 }
