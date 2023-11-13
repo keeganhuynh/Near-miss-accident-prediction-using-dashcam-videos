@@ -91,7 +91,7 @@ def FixVNP(path):
 
   return vnp, vnps
 
-def VanishingPointDetection(output_path, frame_interval=1):
+def VanishingPointDetection(output_path, video_path, frame_interval=1):
 
     # logger.info(args)
 
@@ -115,12 +115,12 @@ def VanishingPointDetection(output_path, frame_interval=1):
     print("Data loading done.")
     print("Start testing.")
     
-    iter_num = test(test_loader, model, output_path, frame_interval)
+    iter_num = test(test_loader, model, output_path, frame_interval, video_path)
       
     print(iter_num, ' VNPs were detected')
     print("Done!")
 
-def test(test_loader, model, path_myf, frame_interval):
+def test(test_loader, model, path_myf, frame_interval, video_path):
     # switch to evaluate mode
     model.eval()
 
@@ -134,7 +134,7 @@ def test(test_loader, model, path_myf, frame_interval):
         iter_num = len(test_loader.dataset)
         ftime = 0
         ntime = 0
-        
+        index = 0
         for i, data in enumerate(bar):
             t = time.time()
             images, names, size = data
@@ -173,7 +173,8 @@ def test(test_loader, model, path_myf, frame_interval):
                 (x1, y1), (x2, y2) = get_boundary_point(y1, x1, angle, size[0], size[1])
                 b_points[i] = (y1, x1, y2, x2)
             
-            vn_point, previous = vnp(b_points, width=CONFIGS["FRAME"]["WIDTH"], height=CONFIGS["FRAME"]["HEIGHT"], previous_lop=previous)
+            vn_point, previous = vnp(b_points, width=CONFIGS["FRAME"]["WIDTH"], height=CONFIGS["FRAME"]["HEIGHT"], previous_lop=previous\
+                                     path=video_path, frame_iter=frame_interval, current_frame=frame_interval*index, fill_with_rvnp=False)
             # print(join(visualize_save_path, names[0].split('/')[-1]), ' => ', vn_point, '\n')
             for i in range(frame_interval):
                 f.write(str(vn_point[0])+','+str(vn_point[1])+'\n')
@@ -195,6 +196,7 @@ def test(test_loader, model, path_myf, frame_interval):
             #     np.save(join(visualize_save_path, names[0].split('/')[-1].split('.')[0]+'_align'), np_data)
             ntime += (time.time() - t)
             bar.update(1)
+            index += 1
     #print('forward time for total images: %.6f' % ftime)
     #print('post-processing time for total images: %.6f' % ntime)
     #return ftime + ntime
