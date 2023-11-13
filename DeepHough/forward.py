@@ -22,6 +22,7 @@ from DeepHough.dataloader import get_loader
 from DeepHough.model.network import Net
 from skimage.measure import label, regionprops
 from DeepHough.utils import reverse_mapping, visulize_mapping, edge_align, get_boundary_point
+from RVPextract import R_VP_detection
 import pandas as pd
 
 config = "DeepHough/config.yml"
@@ -264,7 +265,7 @@ def remove_outlier(inte_point, width, height):
 
     return intersect_point
 
-def vnp(b_points, width, height, previous_lop):
+def vnp(b_points, width, height, previous_lop, path, frame_iter=1, current_frame=0, fill_with_rvnp=False):
     p0 = 0
     p1 = 0
     itersect_point = set_intersect(b_points)
@@ -278,14 +279,18 @@ def vnp(b_points, width, height, previous_lop):
     next_previous_lop = []
    
     if (ls_itersect_point == []):
-        p_0 = 0
-        p_1 = 0
-        for i in previous_lop:
-            p_0 = p_0 + i[0]
-            p_1 = p_1 + i[1]
-            p0, p1 = (p_0/len(previous_lop),p_1/len(previous_lop)+cut_height)
-
-        next_previous_lop = previous_lop
+        if fill_with_rvnp == False:
+            p_0 = 0
+            p_1 = 0
+            for i in previous_lop:
+                p_0 = p_0 + i[0]
+                p_1 = p_1 + i[1]
+                p0, p1 = (p_0/len(previous_lop),p_1/len(previous_lop)+cut_height)
+            next_previous_lop = previous_lop
+        else:
+            detector = RVNP_extractor(video_path=path, skip_frame=frame_iter, exac_fr=current_frame)
+            p0, p1 = detector.R_VP_detection(save_path='', initial_frame=current_frame, end_frame=current_frame+1, single_fr=True)
+            next_previous_lop 
     
     if (ls_itersect_point != []):
         p_0 = 0

@@ -26,7 +26,7 @@ def VisuallizeIntersectPoint(points, image):
     plt.imshow(image)
     plt.show()
 
-def VideoRead(video_path, skip_frame):
+def VideoRead(video_path, skip_frame, exac_fr):
     cap = cv2.VideoCapture(video_path)
     frame_list = []
     n_frame = 0
@@ -42,14 +42,17 @@ def VideoRead(video_path, skip_frame):
             if not ret:
                 break
             if n_frame % skip_frame == 0:
-                frame_list.append(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+                if exac_fr == 0:
+                    frame_list.append(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+                if exac_fr != 0 and n_frame in [exac_fr, skip_frame*(exac_fr+1), skip_frame*(exac_fr+2), skip_frame*(exac_fr+3), skip_frame*(exac_fr+4)]:
+                    frame_list.append(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
             n_frame += 1
         cap.release()
 
     return frame_list, fps, frame_count
 
 class RVNP_extractor:
-    def __init__(self, video_path, skip_frame, nt0=500, TD=0, TN=450, l=1, RANSAC_iter=45):
+    def __init__(self, video_path, skip_frame, nt0=500, TD=0, TN=450, l=1, RANSAC_iter=45, exac_fr=0):
         self.RANSAC_iter = RANSAC_iter
         self.video_path = video_path
         self.skip_frame = skip_frame
@@ -57,7 +60,7 @@ class RVNP_extractor:
         self.TD = TD
         self.TN = TN
         self.l = l
-        self.frame_list, self.fps, self.frame_count = VideoRead(video_path, skip_frame)
+        self.frame_list, self.fps, self.frame_count = VideoRead(video_path, skip_frame, exac_fr)
         self.height = self.frame_list[0].shape[0]
         self.width = self.frame_list[0].shape[1] 
         return
@@ -260,7 +263,7 @@ class RVNP_extractor:
         with open(save_path, 'w') as txt_file:
             txt_file.write(txt)
 
-    def R_VP_detection(self, save_path, initial_frame=0):
+    def R_VP_detection(self, save_path, initial_frame=0, end_frame=10e6, single_fr=False):
         txt = ""
         result = []
         nt0, TD, TN, l, RANSAC_iter = self.nt0, self.TD, self.TN, self.l, self.RANSAC_iter
@@ -287,9 +290,12 @@ class RVNP_extractor:
                     k = 1
                     initial_frame = initial_frame + k
 
-                    if initial_frame >= frame_count - 1:
-                        self.SaveTxt(txt, save_path)
-                        return self.fps, self.frame_count
+                    if initial_frame >= frame_count - 1 or initial_frame == end_frame:
+                        if single_fr == True:
+                            return RVP[0], RVP[1]
+                        else:
+                            self.SaveTxt(txt, save_path)
+                            return self.fps, self.frame_count
                     
                     P0_corner = cv2.goodFeaturesToTrack(frame_list[initial_frame], maxCorners=nt0, qualityLevel=0.01, minDistance=10).reshape(-1,2)
                     P0k_corner = []
@@ -318,9 +324,13 @@ class RVNP_extractor:
             P0_corner = P_0
             P0k_corner = P_k
             
-            if initial_frame + k >= frame_count - 1:
-                self.SaveTxt(txt, save_path)
-                return self.fps, self.frame_count
+            if initial_frame + k >= frame_count - 1 or initial_frame == end_frame:
+                if single_fr == True:
+                    return RVP[0], RVP[1]
+                else:
+                    self.SaveTxt(txt, save_path)
+                    return self.fps, self.frame_count
+            
 
     # vector1 = p2 - p1
     # vector2 = q2 - q1
