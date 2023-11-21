@@ -1,4 +1,3 @@
-
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
@@ -6,7 +5,6 @@ import matplotlib.image as mpimg
 import math
 import random
 import time
-from tqdm import tqdm
 
 def VisuallizeMV(P0, Pk, image):
     print(len(P0))
@@ -26,13 +24,13 @@ def VisuallizeIntersectPoint(points, image):
     plt.imshow(image)
     plt.show()
 
-def VideoRead(video_path, skip_frame, exac_fr):
+def VideoRead(video_path, skip_frame, resize_factor=None):
     cap = cv2.VideoCapture(video_path)
     frame_list = []
     n_frame = 0
     
-    fps = int(cap.get(cv2.CAP_PROP_FPS))
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
 
     if not cap.isOpened():
         print("Không thể mở video.")
@@ -42,17 +40,18 @@ def VideoRead(video_path, skip_frame, exac_fr):
             if not ret:
                 break
             if n_frame % skip_frame == 0:
-                if exac_fr == 0:
-                    frame_list.append(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
-                if exac_fr != 0 and n_frame in [exac_fr, skip_frame*(exac_fr+1), skip_frame*(exac_fr+2), skip_frame*(exac_fr+3), skip_frame*(exac_fr+4)]:
-                    frame_list.append(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+                if resize_factor is not None:
+                    # Thu nhỏ kích thước khung hình nếu có yêu cầu
+                    frame = cv2.resize(frame, None, fx=resize_factor, fy=resize_factor)
+                frame_list.append(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
             n_frame += 1
-        cap.release()
 
+        cap.release()
+        
     return frame_list, fps, frame_count
 
-class RVNP_extractor:
-    def __init__(self, video_path, skip_frame, nt0=500, TD=0, TN=450, l=1, RANSAC_iter=45, exac_fr=0):
+class MVextractor:
+    def __init__(self, video_path, skip_frame, resize_factor=1, nt0=500, TD=0, TN=450, l=1, RANSAC_iter=45):
         self.RANSAC_iter = RANSAC_iter
         self.video_path = video_path
         self.skip_frame = skip_frame
@@ -60,9 +59,10 @@ class RVNP_extractor:
         self.TD = TD
         self.TN = TN
         self.l = l
-        self.frame_list, self.fps, self.frame_count = VideoRead(video_path, skip_frame, exac_fr)
+        self.frame_list, self.fps, self.frame_count = VideoRead(video_path, skip_frame, resize_factor)
         self.height = self.frame_list[0].shape[0]
         self.width = self.frame_list[0].shape[1] 
+        # print(self.height, self.width)
         return
 
     def mv_detection(self, initial_fr, k, P0_corner, P0k_corner):
@@ -263,7 +263,7 @@ class RVNP_extractor:
         with open(save_path, 'w') as txt_file:
             txt_file.write(txt)
 
-    def R_VP_detection(self, save_path, initial_frame=0, end_frame=10e6, single_fr=False):
+    def R_VP_detection(self, save_path, initial_frame=0):
         txt = ""
         result = []
         nt0, TD, TN, l, RANSAC_iter = self.nt0, self.TD, self.TN, self.l, self.RANSAC_iter
@@ -276,8 +276,6 @@ class RVNP_extractor:
         P0_corner = cv2.goodFeaturesToTrack(frame_list[initial_frame], maxCorners=nt0, qualityLevel=0.01, minDistance=10).reshape(-1,2)
         P0k_corner = []
         
-        pbar = tqdm(total=frame_count, position=0, leave=True) #processing bar
-
         while (True):    
             while (True):
                 P_0, P_k = self.mv_detection(initial_frame, k, P0_corner, P0k_corner)
@@ -290,12 +288,9 @@ class RVNP_extractor:
                     k = 1
                     initial_frame = initial_frame + k
 
-                    if initial_frame >= frame_count - 1 or initial_frame == end_frame:
-                        if single_fr == True:
-                            return RVP[0], RVP[1]
-                        else:
-                            self.SaveTxt(txt, save_path)
-                            return self.fps, self.frame_count
+                    if initial_frame >= frame_count - 1:
+                        self.SaveTxt(txt, save_path)
+                        return
                     
                     P0_corner = cv2.goodFeaturesToTrack(frame_list[initial_frame], maxCorners=nt0, qualityLevel=0.01, minDistance=10).reshape(-1,2)
                     P0k_corner = []
@@ -309,41 +304,49 @@ class RVNP_extractor:
             result.append(RVP)
             
             for _ in range(self.skip_frame):
-                txt += f'{RVP[0]},{RVP[1]}\n'
+                txt += f'{self.skip_frame*initial_frame+_},{RVP[0]},{RVP[1]}\n'
                 
             # print(f'{initial_frame}/{len(frame_list)} : {RVP}')
             # VisuallizeIntersectPoint(rvnplist, frame_list[initial_frame])
+            
+            # print(f'------------------------- {initial_frame} -----------------------------')
             # plt.scatter(RVP[0], RVP[1], c='red', s=50, zorder=100)
             # plt.imshow(frame_list[initial_frame])
             # plt.show()
-            # print(f'------------------------- {initial_frame} -----------------------------')
-            # print(f'\n{RVP}\n')
+            # plt.close()
+            
+            # print(f'frame {initial_frame} : \n{RVP}\n')
 
             k += 1
-            pbar.update(1)
             P0_corner = P_0
             P0k_corner = P_k
+            if initial_frame + k >= frame_count - 1:
+                self.SaveTxt(txt, save_path)
+                return
             
-            if initial_frame + k >= frame_count - 1 or initial_frame == end_frame:
-                if single_fr == True:
-                    return RVP[0], RVP[1]
-                else:
-                    self.SaveTxt(txt, save_path)
-                    return self.fps, self.frame_count
-            
+def organize_data(data, frame_count):
+    organized_data = {}
 
-    # vector1 = p2 - p1
-    # vector2 = q2 - q1
-    # norm_A = np.linalg.norm(vector1)
-    # norm_B = np.linalg.norm(vector2)
+    for line in data:
+        index, x, y = map(int, line.split(","))
+        organized_data[index] = (x, y)
 
-    # norm = np.dot(vector1, vector2) / (norm_A * norm_B)
-    
-    # if norm < -1 or norm > 1:
-    #     return None
+    result = []
+    for i in range(frame_count):
+        if i in organized_data:
+            result.append((i, *organized_data[i]))
+        else:
+            closest_index = min(organized_data.keys(), key=lambda k: abs(k - i))
+            result.append((i, *organized_data[closest_index]))
 
-    # theta = np.arccos(np.dot(vector1, vector2) / (norm_A * norm_B))
-    
-    # theta_degrees = np.degrees(theta)
+    return result
 
-    # return theta_degrees
+def read_data_from_file(file_path):
+    with open(file_path, 'r') as file:
+        data = file.readlines()
+    return data
+
+def write_result_to_file(result, output_file_path):
+    with open(output_file_path, 'w') as file:
+        for line in result:
+            file.write(','.join(map(str, line[1:])) + '\n')

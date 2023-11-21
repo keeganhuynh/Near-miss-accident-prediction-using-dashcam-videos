@@ -3,7 +3,7 @@
 from pathlib import Path
 from Yolov7ObjectTracking.detect_and_track import *
 from SpeedETool import *
-from RVPextract import RVNP_extractor
+from RVPextract import *
 import json
 import cv2
 import time
@@ -104,8 +104,16 @@ if __name__ == '__main__':
       fps, frame_count = MakeInput(folderpath, vnp_output_path, videopath, frame_interval, stage=2)
     
     elif vnp_det_option == 1:
-      extractor = RVNP_extractor(videopath, frame_interval)
-      fps, frame_count = extractor.R_VP_detection(vnp_output_path)
+      scale = 0.65
+      extractor = MVextractor(videopath, frame_interval, scale)
+      extractor.R_VP_detection(vnp_output_path, 0)
+      
+      #fill non detected with nearest vnp
+      raw_data = read_data_from_file(vnp_output_path)
+      data = organize_data(raw_data, extractor.frame_count)
+      write_result_to_file(data, vnp_output_path)
+
+      fps, frame_count = extractor.fps, extractor.frame_count
     
     t01 = time.time()
     print(fps, frame_count)
