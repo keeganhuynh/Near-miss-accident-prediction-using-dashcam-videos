@@ -22,7 +22,6 @@ from DeepHough.dataloader import get_loader
 from DeepHough.model.network import Net
 from skimage.measure import label, regionprops
 from DeepHough.utils import reverse_mapping, visulize_mapping, edge_align, get_boundary_point
-from RVPextract import RVNP_extractor
 import pandas as pd
 
 config = "DeepHough/config.yml"
