@@ -35,7 +35,7 @@ import json
 #For SORT tracking
 from sort import *
 import skimage
-# from mvextractor.videocap import VideoCap #update turn detector
+from mvextractor.videocap import VideoCap #update turn detector
 
 #..................d............. Bounding Boxes Drawing ............................
 """Function to Draw Bounding boxes"""
@@ -303,7 +303,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 
                     id, cls, X, Y, Z, x, y, spd, appear = track.id+1, track.detclass, coors[0]-ego_car[0], coors[1], coors[2]-ego_car[2], track.centroidarr[-1][0],track.centroidarr[-1][1], objvec, appear_step
                     
-                    if (appear >= int(5/fps) and cls < 9):
+                    if (appear >= 5 and cls < 9):
                         obj_list.append([id, X, Z])
                     
                     # print()
