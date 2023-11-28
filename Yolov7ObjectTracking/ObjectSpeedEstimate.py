@@ -5,15 +5,15 @@ import cv2
 import json
 import pickle
 class EgoCar:
-    def __init__(self, ttsfps, frame_skip=1):
+    def __init__(self, ttsfps, look_back=5):
       self.fps = ttsfps
       self.speed = None
       self.x_Distance = [0]
       self.z_Distance = [0]
-      self.frame_skip = frame_skip
+      self.look_back = look_back
     
     def update_his(self, x_ego, z_ego):
-      if (len(self.x_Distance) == int(self.fps/self.frame_skip)+1):
+      if (len(self.x_Distance) == self.look_back):
         self.x_Distance = self.x_Distance[1:]
         self.z_Distance = self.z_Distance[1:]
       
@@ -31,21 +31,22 @@ class EgoCar:
       return AbHisX, AbHisZ
          
 class Object:
-    def __init__(self, fps, id, frame_skip=1):
+    def __init__(self, fps, id, frame_skip, look_back=5):
         self.fps = fps
         self.id = id
         self.speed = None
         self.his = []
         self.step = 0
+        self.look_back = look_back
         self.frame_skip = frame_skip
-    
+
     def TakeHis(self):
       posx, posz = zip(*self.his)
       return [list(posx), list(posz)]    
     
     def update_his(self, location):
       self.step += 1
-      if (len(self.his) == int(self.fps/self.frame_skip)):
+      if (len(self.his) == self.look_back):
         self.his = self.his[1:]
       #z = coors[2]-ego_car[2], x = coors[0]-ego_car[0]
       #z = location[0], x = location[1]
@@ -63,7 +64,9 @@ class Object:
         
         if (count <= step):
           return -1
+
         for i in range(0, count-step, step):
+          #khoảng cách từ frame t đến frame 
           dis = np.sqrt((self.his[i+step][0]-self.his[i][0])**2 + (self.his[i+step][1]-self.his[i][1])**2)
           
           if (self.his[i+step][0] - self.his[i+step][0] >= 0.0): 

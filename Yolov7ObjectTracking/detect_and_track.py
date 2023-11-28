@@ -178,8 +178,8 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     idx = -1
     traj_step = 5
     predict_step = 11
-    object_track.append(Object(fps, id = 0))
-    EgoCarControl = EgoCar(ttsfps=fps, frame_skip=frame_interval)
+    object_track.append(Object(fps, id = 0, frame_skip=frame_interval))
+    EgoCarControl = EgoCar(ttsfps=fps)
     predictor = Trajectory(ttfps=fps, frame_skip=frame_interval)
     #-------- -----------------------------
 
@@ -297,7 +297,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                     else:
                       tracked.append(track.id+1)
                       location = (coors[2]-ego_car[2], coors[0]-ego_car[0])
-                      object_track.append(Object(fps, id = track.id+1))
+                      object_track.append(Object(fps, id = track.id+1, frame_skip=frame_interval))
                       object_track[track.id+1].update_his(location)
                       appear_step = object_track[track.id+1].FrameAppear()
       
@@ -396,4 +396,3 @@ if __name__ == '__main__':
     json_file_path = 'data.json'
     fps = 11
     process(video_path, vnp_path, veclocity_path, json_file_path, fps)
-    
