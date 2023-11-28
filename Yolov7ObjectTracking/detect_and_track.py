@@ -187,11 +187,11 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     
     camera_calibration = ObjectClibration(img_shape[1], img_shape[0], FOV)
     intrinsic_mat = camera_calibration.get_intrinsic_matrix()
-    # turn_detector = TurnDetector(intrinsic_mat) #update turn detector
+    turn_detector = TurnDetector(intrinsic_mat) #update turn detector
     
-    #update turn detector
-    # video_mv_cap = VideoCap()
-    # video_mv_cap.open(video_url)
+    # update turn detector
+    video_mv_cap = VideoCap()
+    video_mv_cap.open(video_url)
     #-----------------------------------
 
 
@@ -219,9 +219,9 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
         pred = non_max_suppression(pred, 0.25, 0.45)
 
         #update turn detector
-        # turn_angle = 0
-        # flag, imgcap, motion_vector, _, _ = video_mv_cap.read()
-        # turn_angle = turn_detector.process(imgcap, motion_vector)
+        turn_angle = 0
+        flag, imgcap, motion_vector, _, _ = video_mv_cap.read()
+        turn_angle = turn_detector.process(imgcap, motion_vector)
         # print('\nAngle: ', turn_angle)
         #--------------------------------------------------------
 
@@ -251,7 +251,6 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 #pass an empty array to sort
                 dets_to_sort = np.empty((0,6))
                 
-                obj_box = []
                 # NOTE: We send in detected object class too
                 for x1,y1,x2,y2,conf,detclass in det.cpu().detach().numpy():
                     dets_to_sort = np.vstack((dets_to_sort, 
@@ -266,6 +265,10 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 
                 #camera height setting
                 ego_car = uv_to_world((img_shape[1]//2,img_shape[0]) , CameraHeight, vnp[idx], img_shape, FOV)
+                distance_S = (speed[idx]*frame_interval)/fps
+                gamma = turn_angle 
+                z_ego, x_ego = ego_car[2]+distance_S*np.sin(gamma), ego_car[0]+distance_S*np.cos(gamma)
+                
                 txt_str += "%i %i %i %i %i %i %i %f %i" % (0, 0, 0, 2, 0, img_shape[1]//2, img_shape[0], speed[idx], -1)
                 id, cls, X, Y, Z, x, y, spd, appear = 0, 0, 0, 2, 0, img_shape[1]//2, img_shape[0], speed[idx], -1
                 f_dict.append(object_dict(int(id), int(cls), float(X), float(Y), float(Z), float(spd), int(appear),x,y))
@@ -300,14 +303,14 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 
                     id, cls, X, Y, Z, x, y, spd, appear = track.id+1, track.detclass, coors[0]-ego_car[0], coors[1], coors[2]-ego_car[2], track.centroidarr[-1][0],track.centroidarr[-1][1], objvec, appear_step
                     
-                    if (appear >= 5 and cls < 9):
+                    if (appear >= int(5/fps) and cls < 9):
                         obj_list.append([id, X, Z])
                     
                     # print()
                     f_dict.append(object_dict(int(id), int(cls), float(X), float(Y), float(Z), float(spd), int(appear),x,y))
                 
                 predict_obj = [index[0] for index in obj_list]
-                risk1, risk3, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx])
+                risk1, risk3, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx], ego_car)
                 
                 # draw boxes for visualization
                 

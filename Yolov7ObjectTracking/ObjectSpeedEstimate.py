@@ -11,21 +11,27 @@ class Object:
         self.id = id
         self.speed = None
         self.his = []
+        self.absolote_his = []
         self.step = 0
         self.frame_skip = frame_skip
     
-    def TakeHis(self, traj_step):
-      posx, posz = [], []
-      for i in range(len(self.his)):
-          posz.append(self.his[i][0])
-          posx.append(self.his[i][1])
-      pos = [posx, posz]
-      return pos
-
+    def TakeHis(self):
+      posx, posz = zip(*self.his)
+      return [list(posx), list(posz)]   
+    
+    def TakeAbsoHis(self):
+      posx, posz = zip(*self.absolote_his)
+      return [list(posx), list(posz)]  
+    
     def update_his(self, location):
       self.step += 1
       if (len(self.his) == int(self.fps/self.frame_skip)):
         self.his = self.his[1:]
+        self.absolote_his = self.absolote_his[1:]
+      
+      #z = coors[2]-ego_car[2], x = coors[0]-ego_car[0]
+      #z = location[0], x = location[1]
+
       self.his.append(location)
 
     def FrameAppear(self):
@@ -66,41 +72,14 @@ class Trajectory:
     if model_options == 2:
       model_path = 'Yolov7ObjectTracking/LR_model.pkl'
       self.lr_model = pickle.load(open(model_path, 'rb'))
-    
-    if model_options == 1:
-      model_path = 'Yolov7ObjectTracking/lstm11s.pth'
-      self.lstm_model = pickle.load(open(model_path, 'rb'))
-
-    if model_options == 0:
-      model_path = 'Yolov7ObjectTracking/svm_model.pkl'
-      self.svm_model = pickle.load(open(model_path, 'rb'))
 
     self.n_steps = n_steps
     self.n_features = n_features
     self.ttfps = ttfps
     self.frame_skip = frame_skip
-
-  def LSMTPredict(self, pos_obj):
-    yhat = None
-    x = np.array(pos_obj)
-    x_input = x.reshape((1, self.n_steps, self.n_features))
-    result = self.lstm_model.predict(x_input, verbose=0)
-    return result[0]
-
-  def SVMPredict(self, pos_obj, window_size=5):    
-    result = []
-    
-    input_data = pos_obj
-    
-    for i in range(window_size):
-      input = np.array(input_data)
-      predictions = self.svm_model.predict(input.reshape(1, -1))
-      result.append(predictions[0])
-      input_data.append(predictions[0])
-      input_data = input_data[1:]
-    
-    return result
-  
+  def absoluteHis(self):
+     
+      return 
   def LRPredict(self, pos_obj):    
     result = []
     
@@ -126,7 +105,7 @@ class Trajectory:
 
       return PredPos, risk
 
-  def PredictRisk(self, frame_id, obj_list, traj_step, predict_step, object_track, Ego_speed):
+  def PredictRisk(self, frame_id, obj_list, traj_step, predict_step, object_track, Ego_speed, ego_car):
       obj_list = obj_list[1:]
       
       risk_obj_1s = []
@@ -134,7 +113,7 @@ class Trajectory:
       risk_obj_10s = []
 
       for obj_id in obj_list:
-          obj_pos = object_track[obj_id].TakeHis(traj_step)
+          obj_pos = object_track[obj_id].TakeHis()
           #Ở đây mình có thể setting thêm một cái tham số appear để quyết định xem có detect nó hay không
           
           predict_step = 1 * int(self.ttfps/self.frame_skip)
