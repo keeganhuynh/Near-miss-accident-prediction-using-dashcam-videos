@@ -19,14 +19,15 @@ class EgoCar:
       
       self.x_Distance.append(x_ego+sum(self.x_Distance))
       self.z_Distance.append(z_ego+sum(self.z_Distance))
-      print('\n EGO: ',self.x_Distance)
       
     def TakeAbsoHis(self, ObjHis):
       objectHis = ObjHis
-      AbHisX, AbHisZ = [], []
+      AbHisX, AbHisZ = [], []      
       for i in range(len(objectHis[0])):
-         AbHisX.append(objectHis[i][0] + self.x_Distance[i])
-         AbHisZ.append(objectHis[i][1] + self.z_Distance[i])
+        # print(self.z_Distance[i])
+        # print(self.z_Distance[i])
+        AbHisX.append(objectHis[0][i] + self.x_Distance[i])
+        AbHisZ.append(objectHis[1][i] + self.z_Distance[i])
       return AbHisX, AbHisZ
          
 class Object:
@@ -49,8 +50,6 @@ class Object:
       #z = coors[2]-ego_car[2], x = coors[0]-ego_car[0]
       #z = location[0], x = location[1]
       self.his.append(location)
-      print('OBJ: ', self.his)
-      
 
     def FrameAppear(self):
         return self.step
