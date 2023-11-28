@@ -179,6 +179,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     traj_step = 5
     predict_step = 11
     object_track.append(Object(fps, id = 0))
+    EgoCarControl = EgoCar(ttsfps=fps frame_skip=frame_interval)
     predictor = Trajectory(ttfps=fps, frame_skip=frame_interval)
     #-------- -----------------------------
 
@@ -266,14 +267,14 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 #camera height setting
                 ego_car = uv_to_world((img_shape[1]//2,img_shape[0]) , CameraHeight, vnp[idx], img_shape, FOV)
                 distance_S = (speed[idx]*frame_interval)/fps
-                gamma = turn_angle 
+                gamma = turn_angle
                 z_ego, x_ego = ego_car[2]+distance_S*np.sin(gamma), ego_car[0]+distance_S*np.cos(gamma)
+                EgoCarControl.update_his(x_ego, z_ego)
                 
                 txt_str += "%i %i %i %i %i %i %i %f %i" % (0, 0, 0, 2, 0, img_shape[1]//2, img_shape[0], speed[idx], -1)
+                txt_str += "\n"
                 id, cls, X, Y, Z, x, y, spd, appear = 0, 0, 0, 2, 0, img_shape[1]//2, img_shape[0], speed[idx], -1
                 f_dict.append(object_dict(int(id), int(cls), float(X), float(Y), float(Z), float(spd), int(appear),x,y))
-                
-                txt_str += "\n"
                 # print(len(object_track))
                 #loop over tracks
               
@@ -310,7 +311,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                     f_dict.append(object_dict(int(id), int(cls), float(X), float(Y), float(Z), float(spd), int(appear),x,y))
                 
                 predict_obj = [index[0] for index in obj_list]
-                risk1, risk3, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, speed[idx], ego_car)
+                risk1, risk3, risk10 = predictor.PredictRisk(idx, predict_obj, traj_step, predict_step, object_track, EgoCarControl)
                 
                 # draw boxes for visualization
                 

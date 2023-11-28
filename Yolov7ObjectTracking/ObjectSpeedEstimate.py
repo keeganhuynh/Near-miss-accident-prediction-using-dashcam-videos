@@ -4,30 +4,46 @@ import argparse
 import cv2
 import json
 import pickle
-
+class EgoCar:
+    def __init__(self, ttsfps, frame_skip=1):
+      self.fps = ttsfps
+      self.speed = None
+      self.x_Distance = []
+      self.z_Distance = []
+      self.frame_skip = frame_skip
+    
+    def update_his(self, x_ego, z_ego):
+      if (len(self.his) == int(self.fps/self.frame_skip)):
+        self.x_Distance = self.x_Distance[1:]
+        self.z_Distance = self.z_Distance[1:]
+      self.x_Distance.append(x_ego+sum(self.x_Distance))
+      self.y_Distance.append(z_ego+sum(self.z_Distance))
+      
+    def TakeAbsoHis(self, ObjHis):
+      objectHis = ObjHis
+      AbHisX, AbHisZ = [], []
+      for i in range(len(objectHis)):
+         objectHis[i][0] = objectHis[i][0] + self.x_Distance[i]
+         objectHis[i][1] = objectHis[i][1] + self.z_Distance[i]
+      return AbHisX, AbHisZ
+         
 class Object:
     def __init__(self, fps, id, frame_skip=1):
         self.fps = fps
         self.id = id
         self.speed = None
         self.his = []
-        self.absolote_his = []
         self.step = 0
         self.frame_skip = frame_skip
     
     def TakeHis(self):
       posx, posz = zip(*self.his)
-      return [list(posx), list(posz)]   
-    
-    def TakeAbsoHis(self):
-      posx, posz = zip(*self.absolote_his)
-      return [list(posx), list(posz)]  
+      return [list(posx), list(posz)]    
     
     def update_his(self, location):
       self.step += 1
       if (len(self.his) == int(self.fps/self.frame_skip)):
         self.his = self.his[1:]
-        self.absolote_his = self.absolote_his[1:]
       
       #z = coors[2]-ego_car[2], x = coors[0]-ego_car[0]
       #z = location[0], x = location[1]
@@ -72,23 +88,18 @@ class Trajectory:
     if model_options == 2:
       model_path = 'Yolov7ObjectTracking/LR_model.pkl'
       self.lr_model = pickle.load(open(model_path, 'rb'))
-
     self.n_steps = n_steps
     self.n_features = n_features
     self.ttfps = ttfps
     self.frame_skip = frame_skip
-  def absoluteHis(self):
-     
-      return 
+
   def LRPredict(self, pos_obj):    
     result = []
-    
     input_data = np.array(pos_obj)
     result = self.lr_model.predict([input_data])
-       
     return result[0]
 
-  def TrajectoryPredict(self, obj_pos, traj_step, predict_step, ego_velocity=0, fps=11, ego_turn_angle=0):
+  def TrajectoryPredict(self, obj_pos, traj_step, predict_step):
       
       arrx, arry = obj_pos[0][-traj_step:], obj_pos[1][-traj_step:]
 
@@ -100,12 +111,11 @@ class Trajectory:
       for i in range(len(PredPosX)):  
         if (PredPosX[i] < 4 and PredPosZ[i] < 4): 
           risk = True
-      
       PredPos = [PredPosX, PredPosZ]
 
       return PredPos, risk
 
-  def PredictRisk(self, frame_id, obj_list, traj_step, predict_step, object_track, Ego_speed, ego_car):
+  def PredictRisk(self, frame_id, obj_list, traj_step, predict_step, object_track, EgoCar):
       obj_list = obj_list[1:]
       
       risk_obj_1s = []
@@ -114,22 +124,22 @@ class Trajectory:
 
       for obj_id in obj_list:
           obj_pos = object_track[obj_id].TakeHis()
+          absHis = EgoCar.TakeAbsoHis(obj_pos)
           #Ở đây mình có thể setting thêm một cái tham số appear để quyết định xem có detect nó hay không
           
           predict_step = 1 * int(self.ttfps/self.frame_skip)
-          PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
+          PredPos_, risk = self.TrajectoryPredict(absHis, traj_step, predict_step)
           if (risk == True):
               risk_obj_1s.append(obj_id)
 
           predict_step = 3 * int(self.ttfps/self.frame_skip)
-          PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
+          PredPos_, risk = self.TrajectoryPredict(absHis, traj_step, predict_step)
           if (risk == True):
               risk_obj_3s.append(obj_id)
           
           predict_step = 10 * int(self.ttfps/self.frame_skip)
-          PredPos_, risk = self.TrajectoryPredict(obj_pos, traj_step, predict_step)
+          PredPos_, risk = self.TrajectoryPredict(absHis, traj_step, predict_step)
           if (risk == True):
               risk_obj_10s.append(obj_id)
-
 
       return risk_obj_1s, risk_obj_3s, risk_obj_10s
