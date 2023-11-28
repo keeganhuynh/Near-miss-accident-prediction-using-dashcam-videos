@@ -8,23 +8,25 @@ class EgoCar:
     def __init__(self, ttsfps, frame_skip=1):
       self.fps = ttsfps
       self.speed = None
-      self.x_Distance = []
-      self.z_Distance = []
+      self.x_Distance = [0]
+      self.z_Distance = [0]
       self.frame_skip = frame_skip
     
     def update_his(self, x_ego, z_ego):
-      if (len(self.his) == int(self.fps/self.frame_skip)):
+      if (len(self.x_Distance) == int(self.fps/self.frame_skip)+1):
         self.x_Distance = self.x_Distance[1:]
         self.z_Distance = self.z_Distance[1:]
+      
       self.x_Distance.append(x_ego+sum(self.x_Distance))
-      self.y_Distance.append(z_ego+sum(self.z_Distance))
+      self.z_Distance.append(z_ego+sum(self.z_Distance))
+      print('\n EGO: ',self.x_Distance)
       
     def TakeAbsoHis(self, ObjHis):
       objectHis = ObjHis
       AbHisX, AbHisZ = [], []
-      for i in range(len(objectHis)):
-         objectHis[i][0] = objectHis[i][0] + self.x_Distance[i]
-         objectHis[i][1] = objectHis[i][1] + self.z_Distance[i]
+      for i in range(len(objectHis[0])):
+         AbHisX.append(objectHis[i][0] + self.x_Distance[i])
+         AbHisZ.append(objectHis[i][1] + self.z_Distance[i])
       return AbHisX, AbHisZ
          
 class Object:
@@ -44,11 +46,11 @@ class Object:
       self.step += 1
       if (len(self.his) == int(self.fps/self.frame_skip)):
         self.his = self.his[1:]
-      
       #z = coors[2]-ego_car[2], x = coors[0]-ego_car[0]
       #z = location[0], x = location[1]
-
       self.his.append(location)
+      print('OBJ: ', self.his)
+      
 
     def FrameAppear(self):
         return self.step

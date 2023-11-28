@@ -179,7 +179,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     traj_step = 5
     predict_step = 11
     object_track.append(Object(fps, id = 0))
-    EgoCarControl = EgoCar(ttsfps=fps frame_skip=frame_interval)
+    EgoCarControl = EgoCar(ttsfps=fps, frame_skip=frame_interval)
     predictor = Trajectory(ttfps=fps, frame_skip=frame_interval)
     #-------- -----------------------------
 
