@@ -193,6 +193,18 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
     # update turn detector
     video_mv_cap = VideoCap()
     video_mv_cap.open(video_url)
+    
+    frame_counter = 0
+    turn_angle = []
+    while True:
+        flag, imgcap, motion_vector, _, _ = video_mv_cap.read()
+        if not flag:
+          break
+        frame_counter += 1
+        if frame_counter % 3 == 0:
+          turn_angle.append(turn_detector.process(imgcap, motion_vector))
+        # print('\nAngle: ', turn_angle)
+        #--------------------------------------------------------
     #-----------------------------------
 
 
@@ -218,13 +230,6 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
         # Apply NMS
         # pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
         pred = non_max_suppression(pred, 0.25, 0.45)
-
-        #update turn detector
-        turn_angle = 0
-        flag, imgcap, motion_vector, _, _ = video_mv_cap.read()
-        turn_angle = turn_detector.process(imgcap, motion_vector)
-        # print('\nAngle: ', turn_angle)
-        #--------------------------------------------------------
 
         # Process detections
         for i, det in enumerate(pred):  # detections per image
@@ -267,7 +272,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 #camera height setting
                 ego_car = uv_to_world((img_shape[1]//2,img_shape[0]) , CameraHeight, vnp[idx], img_shape, FOV)
                 distance_S = (speed[idx]*frame_interval)/fps
-                gamma = turn_angle
+                gamma = turn_angle[idx]
                 z_ego, x_ego = ego_car[2]+distance_S*np.sin(gamma), ego_car[0]+distance_S*np.cos(gamma)
                 EgoCarControl.update_his(x_ego, z_ego)
                 
@@ -330,7 +335,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                   'Risk_Object_1s' : risk1,
                   'Risk_Object_3s' : risk3,
                   'Risk_Object_10s' : risk10,
-                  'Turn_angle' : 0
+                  'Turn_angle' : turn_angle[idx]
                 }
                 pp_json[json_step_name] = [frame_info]
 

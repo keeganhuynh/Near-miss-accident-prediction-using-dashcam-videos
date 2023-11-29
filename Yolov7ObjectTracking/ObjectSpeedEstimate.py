@@ -4,6 +4,7 @@ import argparse
 import cv2
 import json
 import pickle
+
 class EgoCar:
     def __init__(self, ttsfps, look_back=5):
       self.fps = ttsfps
