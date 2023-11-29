@@ -14,7 +14,9 @@ class EgoCar:
     
     def TakeHis(self):
       return [list(self.x_Distance), list(self.z_Distance)] 
-
+    
+    def SafeZone(self, x, y):
+       
     def update_his(self, x_ego, z_ego):
       if (len(self.x_Distance) == self.look_back):
         self.x_Distance = self.x_Distance[1:]
