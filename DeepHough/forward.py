@@ -90,7 +90,7 @@ def FixVNP(path):
 
   return vnp, vnps
 
-def VanishingPointDetection(output_path, video_path, frame_interval=1):
+def VanishingPointDetection(output_path, video_path, frame_interval=1, fallback_RVP=None):
 
     # logger.info(args)
 
@@ -108,13 +108,13 @@ def VanishingPointDetection(output_path, video_path, frame_interval=1):
         else:
             print('No pretrained model found')
     # dataloader
-    test_loader = get_loader(CONFIGS["DATA"]["TEST_DIR"], CONFIGS["DATA"]["TEST_LABEL_FILE"], 
+    test_loader = get_loader(CONFIGS["DATA"]["TEST_DIR"], CONFIGS["DATA"]["TEST_LABEL_FILE"],
                                 batch_size=1, num_thread=CONFIGS["DATA"]["WORKERS"], test=True)
 
     print("Data loading done.")
     print("Start testing.")
-    
-    index, iter_num = test(test_loader, model, output_path, frame_interval, video_path)
+
+    index, iter_num = test(test_loader, model, output_path, frame_interval, video_path, fallback_RVP)
     if index / iter_num < 0.5:
       print('********************************************************************\n')
       print(f'WARNING: just {index}/{iter_num} was detect')
@@ -123,7 +123,7 @@ def VanishingPointDetection(output_path, video_path, frame_interval=1):
       print(index, ' VNPs were detected')
     print("Done!")
 
-def test(test_loader, model, path_myf, frame_interval, video_path):
+def test(test_loader, model, path_myf, frame_interval, video_path, fallback_RVP=None):
     # switch to evaluate mode
     model.eval()
 
@@ -141,11 +141,11 @@ def test(test_loader, model, path_myf, frame_interval, video_path):
         for i, data in enumerate(bar):
             t = time.time()
             images, names, size = data
-            
+
             images = images.cuda(device=CONFIGS["TRAIN"]["GPU_ID"])
             # size = (size[0].item(), size[1].item())       
             key_points = model(images)
-            
+
             key_points = torch.sigmoid(key_points)
             ftime += (time.time() - t)
             t = time.time()
@@ -163,7 +163,7 @@ def test(test_loader, model, path_myf, frame_interval, video_path):
             b_points = reverse_mapping(plist, numAngle=CONFIGS["MODEL"]["NUMANGLE"], numRho=CONFIGS["MODEL"]["NUMRHO"], size=(400, 400))
             scale_w = size[1] / 400
             scale_h = size[0] / 400
-            
+
             for i in range(len(b_points)):
                 y1 = int(np.round(b_points[i][0] * scale_h))
                 x1 = int(np.round(b_points[i][1] * scale_w))
@@ -175,17 +175,25 @@ def test(test_loader, model, path_myf, frame_interval, video_path):
                     angle = np.arctan((y1-y2) / (x1-x2))
                 (x1, y1), (x2, y2) = get_boundary_point(y1, x1, angle, size[0], size[1])
                 b_points[i] = (y1, x1, y2, x2)
-            
+
             vn_point, previous, flag = vnp(b_points, width=CONFIGS["FRAME"]["WIDTH"], height=CONFIGS["FRAME"]["HEIGHT"], previous_lop=previous,\
-                                     path=video_path, frame_iter=frame_interval, current_frame=index, fill_with_rvnp=False)
+                                     path=video_path, frame_iter=frame_interval, current_frame=index, fallback_RVP=fallback_RVP)
+
+            if flag and fallback_RVP is not None:
+                vn_point, RVP, flag = fallback_RVP.R_VP_detection(str(path_myf), initial_frame=index, fallback=True)
+
             # print(index)
             # print(join(visualize_save_path, names[0].split('/')[-1]), ' => ', vn_point, '\n')
-            for i in range(frame_interval):
-                # f.write(str(vn_point[0])+','+str(vn_point[1])+'\n')
-                f.write(str(vn_point[0])+','+str(vn_point[1])+','+str(flag)+'\n')
+            for _ in range(frame_interval):
+                if flag and fallback_RVP is not None:
+                    f.write(f'{RVP[0]},{RVP[1]},{flag}\n')
+                else:
+                    f.write(f'{vn_point[0]},{vn_point[1]},{flag}\n')
+                    # f.write(str(vn_point[0])+','+str(vn_point[1])+'\n')
+
             if flag == False:
               index += 1
-            
+
             # plt.scatter(int(vn_point[0]), int(vn_point[1]), color='red', marker='o')
 
             # vis = visulize_mapping(b_points, size[::-1], names[0])
@@ -201,7 +209,7 @@ def test(test_loader, model, path_myf, frame_interval, video_path):
             #     np_data = np.array(b_points)
             #     np.save(join(visualize_save_path, names[0].split('/')[-1].split('.')[0]+'_align'), np_data)
             bar.update(1)
-            
+
     #print('forward time for total images: %.6f' % ftime)
     #print('post-processing time for total images: %.6f' % ntime)
     #return ftime + ntime
@@ -231,25 +239,25 @@ def set_intersect(b_points):
     line = []
     num_line = 0
     intersect_point = []
-  
+
     for point2 in set_p:
         p1 = point2[:2]
         p2 = point2[2:]
         line.append(get_line(p1,p2))
         num_line = num_line + 1
 
-    if (num_line == 0): 
+    if (num_line == 0):
         return None
 
     for i in range(num_line):
         for j in range(i+1,num_line):
-            if (line[i] == None or line[j] == None): 
+            if (line[i] == None or line[j] == None):
                 continue
             intersect_point.append(get_intersection(line[i], line[j]))
     return intersect_point
 
 def remove_outlier(inte_point, width, height):
-  
+
     intersect_point = []
 
     if (inte_point == None):
@@ -272,30 +280,31 @@ def remove_outlier(inte_point, width, height):
 
     return intersect_point
 
-def vnp(b_points, width, height, previous_lop, path, frame_iter=1, current_frame=0, fill_with_rvnp=False):
+def vnp(b_points, width, height, previous_lop, path, frame_iter=1, current_frame=0, fallback_RVP=None):
     p0 = 0
     p1 = 0
     itersect_point = set_intersect(b_points)
     flag = False
-    
+
     scale = CONFIGS["FRAME"]["SCALE"]
     cut_height = height/scale #config
 
     ls_itersect_point = remove_outlier(itersect_point, width, height)
 
     next_previous_lop = []
-   
+
     if (ls_itersect_point == []):
         flag = True
-        p_0 = 0
-        p_1 = 0
-        for i in previous_lop:
-            p_0 = p_0 + i[0]
-            p_1 = p_1 + i[1]
-            p0, p1 = (p_0/len(previous_lop),p_1/len(previous_lop)+cut_height)
-        next_previous_lop = previous_lop
-            
-    
+        if fallback_RVP is None:
+            p_0 = 0
+            p_1 = 0
+            for i in previous_lop:
+                p_0 = p_0 + i[0]
+                p_1 = p_1 + i[1]
+                p0, p1 = (p_0/len(previous_lop),p_1/len(previous_lop)+cut_height)
+            next_previous_lop = previous_lop
+
+
     if (ls_itersect_point != []):
         p_0 = 0
         p_1 = 0
@@ -304,9 +313,9 @@ def vnp(b_points, width, height, previous_lop, path, frame_iter=1, current_frame
             p_1 = p_1 + i[1]
             p0, p1 = (p_0/len(ls_itersect_point),p_1/len(ls_itersect_point)+cut_height)
         next_previous_lop = ls_itersect_point
-    
+
     return (p0,p1), next_previous_lop, flag
-   
+
 if __name__ == '__main__':
     output_path = '/content/drive/MyDrive/ADAS/Runs/20211213110138_0_8/vnp.txt'
     VanishingPointDetection(output_path)

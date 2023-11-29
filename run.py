@@ -114,6 +114,16 @@ if __name__ == '__main__':
       write_result_to_file(data, vnp_output_path)
 
       fps, frame_count = extractor.fps, extractor.frame_count
+
+    elif vnp_det_option == 2:
+        scale = 0.65
+        # Use DeepHough as default and RVNP as fallback
+        from vnp import MakeInput
+        extractor = MVextractor(videopath, frame_interval, scale)
+        fps, frame_count = MakeInput(str(folderpath), str(vnp_output_path), str(videopath),
+                                     frame_interval=frame_interval,
+                                     stage=3,
+                                     fallback_RVP=extractor)
     
     t01 = time.time()
     print(fps, frame_count)
