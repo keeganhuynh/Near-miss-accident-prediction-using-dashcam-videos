@@ -12,6 +12,9 @@ class EgoCar:
       self.z_Distance = [0]
       self.look_back = look_back
     
+    def TakeHis(self):
+      return [list(self.x_Distance), list(self.z_Distance)] 
+
     def update_his(self, x_ego, z_ego):
       if (len(self.x_Distance) == self.look_back):
         self.x_Distance = self.x_Distance[1:]
@@ -90,7 +93,7 @@ class Object:
 class Trajectory:
   def __init__(self, n_steps=5, n_features=1, model_options=2, ttfps=15, frame_skip=1):
     if model_options == 2:
-      model_path = 'Yolov7ObjectTracking/LR_model.pkl'
+      model_path = 'Yolov7ObjectTracking/LR_Model/linear_regression_model.pkl'
       self.lr_model = pickle.load(open(model_path, 'rb'))
     self.n_steps = n_steps
     self.n_features = n_features
@@ -105,7 +108,7 @@ class Trajectory:
 
   def TrajectoryPredict(self, obj_pos, traj_step, predict_step):
       
-      arrx, arry = obj_pos[0][-traj_step:], obj_pos[1][-traj_step:]
+      arrx, arry = obj_pos[0], obj_pos[1]
 
       PredPosX = self.LRPredict(arrx)
       PredPosZ = self.LRPredict(arry)
@@ -115,6 +118,7 @@ class Trajectory:
       for i in range(len(PredPosX)):  
         if (PredPosX[i] < 4 and PredPosZ[i] < 4): 
           risk = True
+      
       PredPos = [PredPosX, PredPosZ]
 
       return PredPos, risk
@@ -129,11 +133,15 @@ class Trajectory:
       for obj_id in obj_list:
           obj_pos = object_track[obj_id].TakeHis()
           absHis = EgoCar.TakeAbsoHis(obj_pos)
+          ego_car_his = EgoCar.TakeHis()
+
+          print('Obj His: ', absHis[0] - ego_car_his[0])
           #Ở đây mình có thể setting thêm một cái tham số appear để quyết định xem có detect nó hay không
           
           predict_step = 1 * int(self.ttfps/self.frame_skip)
           PredPos_, risk = self.TrajectoryPredict(absHis, traj_step, predict_step)
           if (risk == True):
+              print(obj_id)
               risk_obj_1s.append(obj_id)
 
           predict_step = 3 * int(self.ttfps/self.frame_skip)
