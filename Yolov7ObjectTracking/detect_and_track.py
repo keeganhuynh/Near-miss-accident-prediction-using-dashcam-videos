@@ -201,12 +201,11 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
         if not flag:
           break
         frame_counter += 1
-        if frame_counter % 3 == 0:
+        if frame_counter % frame_interval == 0:
           turn_angle.append(turn_detector.process(imgcap, motion_vector))
         # print('\nAngle: ', turn_angle)
         #--------------------------------------------------------
     #-----------------------------------
-
 
     bar = tqdm.tqdm(len(dataset))
     for path, img, im0s, vid_cap in dataset:
@@ -272,7 +271,10 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                 #camera height setting
                 ego_car = uv_to_world((img_shape[1]//2,img_shape[0]) , CameraHeight, vnp[idx], img_shape, FOV)
                 distance_S = (speed[idx]*frame_interval)/fps
-                gamma = turn_angle[idx]
+                try: 
+                  gamma = turn_angle[idx]
+                except:
+                  gamma = 0
                 z_ego, x_ego = ego_car[2]+distance_S*np.sin(gamma), ego_car[0]+distance_S*np.cos(gamma)
                 EgoCarControl.update_his(x_ego, z_ego)
                 
@@ -335,7 +337,7 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                   'Risk_Object_1s' : risk1,
                   'Risk_Object_3s' : risk3,
                   'Risk_Object_10s' : risk10,
-                  'Turn_angle' : turn_angle[idx]
+                  'Turn_angle' : gamma
                 }
                 pp_json[json_step_name] = [frame_info]
 
@@ -346,8 +348,8 @@ def detect(file_source, vnp, speed, json_file_path, img_shape = (720,1280), ins_
                     "FrameCount" : idx
                   }],
         "CameraFOV": [{
-                    "Horizontal" : 110,
-                    "Vertical" : 70
+                    "Horizontal" : FOV[0],
+                    "Vertical" : FOV[1]
                       }],
         "FrameInfo": {}
     }

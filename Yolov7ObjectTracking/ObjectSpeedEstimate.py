@@ -97,7 +97,7 @@ class Object:
 class Trajectory:
   def __init__(self, n_steps=5, n_features=1, model_options=2, ttfps=15, frame_skip=1):
     if model_options == 2:
-      model_path = 'Yolov7ObjectTracking/LR_Model/linear_regression_model.pkl'
+      model_path = '/content/Near-miss-accident-prediction-using-dashcam-videos/Yolov7ObjectTracking/LR_model.pkl'
       self.lr_model = pickle.load(open(model_path, 'rb'))
     self.n_steps = n_steps
     self.n_features = n_features
@@ -138,8 +138,6 @@ class Trajectory:
           obj_pos = object_track[obj_id].TakeHis()
           absHis = EgoCar.TakeAbsoHis(obj_pos)
           ego_car_his = EgoCar.TakeHis()
-
-          print('Obj His: ', absHis[0] - ego_car_his[0])
           #Ở đây mình có thể setting thêm một cái tham số appear để quyết định xem có detect nó hay không
           
           predict_step = 1 * int(self.ttfps/self.frame_skip)
